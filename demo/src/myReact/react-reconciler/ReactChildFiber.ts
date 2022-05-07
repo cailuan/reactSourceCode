@@ -35,6 +35,11 @@ function ChildReconciler(shouldTrackSideEffects){
     }
   }
   function createChild(returnFiber,newChild,lanes){
+    if(typeof newChild == 'string' || typeof newChild == 'number'){
+      const created = createFiberFromText(''+newChild,returnFiber.mode,lanes)
+      created.return = returnFiber
+      return created
+    }
     if(typeof newChild === 'object' && typeof newChild !== null){
       switch(newChild.$$typeof){
         case REACT_ELEMENT_TYPE:
