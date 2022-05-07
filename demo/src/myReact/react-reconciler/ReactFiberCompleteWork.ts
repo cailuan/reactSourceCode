@@ -15,6 +15,7 @@ const appendAllChildren = function(parent,workInProgress,needsVisibilityToggle,i
       }
       node = node.return;
     }
+    node = node.sibling
   }
 }
 

@@ -138,8 +138,17 @@ function completeUnitOfWork(unitOfWork){
     const current = completedWork.alternate;
     const returnFiber = completedWork.return;
     let next = completeWork(current,completedWork,subtreeRenderLanes)
+
+    const siblingFiber = completedWork.sibling;
+
+    if (siblingFiber != null) {
+      workInProgress = siblingFiber;
+      return;
+    }
+
     completedWork = returnFiber
     workInProgress = completedWork
+    
   
   }while(completedWork != null)
 
