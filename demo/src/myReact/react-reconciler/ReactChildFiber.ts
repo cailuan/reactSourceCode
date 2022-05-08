@@ -53,7 +53,10 @@ function ChildReconciler(shouldTrackSideEffects){
 
   function placeChild(newFiber,lastPlacedIndex,newIdx){
     newFiber.index = newIdx
+    if(!shouldTrackSideEffects) return lastPlacedIndex
+    newFiber.flags |= Placement
     return lastPlacedIndex
+    
   }
 
   function reconcileChildrenArray(returnFiber,currentFirstChild,newChildren,lanes){
@@ -81,6 +84,9 @@ function ChildReconciler(shouldTrackSideEffects){
 
   function reconcileChildFibers(returnFiber,currentFirstChild,newChild,lanes){
     let isUnkeyedTopLevelFragment = typeof newChild === 'object' && newChild != null && newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null
+    if(isUnkeyedTopLevelFragment){
+      newChild = newChild.props.children;
+    }
 
     if(typeof newChild === 'object' && newChild != null){
       switch(newChild.$$typeof){

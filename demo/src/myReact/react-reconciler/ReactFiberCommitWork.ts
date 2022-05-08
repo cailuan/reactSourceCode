@@ -32,7 +32,11 @@ function commitMutationEffects_complete(root){
   while(nextEffect != null){
     const fiber = nextEffect;
     commitMutationEffectsOnFiber(fiber,root)
-
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      nextEffect = sibling;
+      return;
+    }
     nextEffect = fiber.return;
   }
 }

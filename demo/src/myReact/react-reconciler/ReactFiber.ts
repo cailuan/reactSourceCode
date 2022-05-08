@@ -1,3 +1,4 @@
+import { REACT_ELEMENT_TYPE } from "../shared/ReactSymbols";
 import { NoFlags } from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import { HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags"
@@ -65,6 +66,11 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
   let resolvedType = type
   if(typeof type === 'string'){
     fiberTag = HostComponent
+  }else {
+    getTag:switch(type){
+      case REACT_ELEMENT_TYPE:
+        return createFiberFromFragment(pendingProps.children,mode,lanes,key)
+    }
   }
   const fiber = createFiber(fiberTag,pendingProps,key,mode)
   fiber.elementType = type
@@ -72,3 +78,10 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
   fiber.lanes = lanes
   return fiber
 }
+
+
+export function createFiberFromFragment(elements,mode,lanes,key){
+
+}
+
+
