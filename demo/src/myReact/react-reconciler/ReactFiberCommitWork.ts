@@ -1,5 +1,5 @@
 import { appendChildToContainer } from "../react-dom/client/ReactDOMHostConfig"
-import { Placement, Update } from "./ReactFiberFlags"
+import { MutationMask, NoFlags, Placement, Update } from "./ReactFiberFlags"
 import { NoLanes } from "./ReactFiberLane"
 import { HostComponent, HostRoot, HostText } from "./ReactWorkTags"
 
@@ -19,7 +19,8 @@ function commitMutationEffects_begin(root){
   while(nextEffect != null){
     let fiber = nextEffect;
     const child = fiber.child;
-    if(child != null){
+    // todo subtreeFlags (fiber.subtreeFlags & MutationMask) !== NoFlags  满足该条件
+    if(child != null && (MutationMask && fiber.subtreeFlags) !== NoFlags ){
       nextEffect = child;
     }else{
       commitMutationEffects_complete(root)

@@ -123,6 +123,7 @@ function performUnitOfWork(unitOfWork){
 
   unitOfWork.memoizedProps = unitOfWork.pendingProps
   if(next == null){
+    
     completeUnitOfWork(unitOfWork)
   }else{
     workInProgress = next

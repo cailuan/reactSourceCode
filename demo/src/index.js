@@ -11,6 +11,6 @@ console.log(ReactDOM,"ReactDOM")
 // ReactDOM.createRoot(rootEl).render('1222');
 
 debugger
-createRoot(rootEl).render(<div><span>origin</span><div><span>span</span><p>2222</p><p>1111</p></div></div>);
+createRoot(rootEl).render(<div>111<div>111</div>999</div>);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);

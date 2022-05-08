@@ -1,5 +1,7 @@
 import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild} from "../react-dom/client/ReactDOMHostConfig";
 import { getRootHostContainer } from "./ReactFiberHostContext";
+import { NoLanes } from "./ReactFiberLane";
+import { ProfileMode } from "./ReactTypeOfMode";
 import { HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 
 const appendAllChildren = function(parent,workInProgress,needsVisibilityToggle,isHidden){
@@ -30,6 +32,7 @@ export function completeWork(current,workInProgress,renderLanes){
       return null
     case HostRoot:
       const fiberRoot = workInProgress.stateNode
+      bubbleProperties(workInProgress)
       break
     case HostComponent:
       
@@ -38,10 +41,25 @@ export function completeWork(current,workInProgress,renderLanes){
       appendAllChildren(instance, workInProgress, false, false)
       workInProgress.stateNode = instance
       finalizeInitialChildren(instance,type,newProps,_rootContainerInstance)
+      bubbleProperties(workInProgress)
       return null
   }
 }
 
-function bubbleProperties(workInProgress){
-  return null
+function bubbleProperties(completedWork){
+  const didBailout = completedWork.alternate != null && completedWork.alternate.child  == completedWork.child
+  let subtreeFlags:any = NoLanes
+  if(!didBailout){
+    if((completedWork.mode & ProfileMode) !== NoLanes ){
+      let child = completedWork.child
+      while(child != null){
+        subtreeFlags |= child.subtreeFlags
+        subtreeFlags |= child.flags
+        child = child.sibling
+      }
+    }
+
+    completedWork.subtreeFlags |= subtreeFlags
+  }
+  return didBailout
 }
