@@ -2,13 +2,17 @@ import { createTextInstance ,createInstance,finalizeInitialChildren, appendIniti
 import { getRootHostContainer } from "./ReactFiberHostContext";
 import { NoLanes } from "./ReactFiberLane";
 import { ProfileMode } from "./ReactTypeOfMode";
-import { HostComponent, HostRoot, HostText } from "./ReactWorkTags";
+import { Fragment, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 
 const appendAllChildren = function(parent,workInProgress,needsVisibilityToggle,isHidden){
   let node = workInProgress.child;
   while(node != null){
     if(node.tag === HostComponent || node.tag === HostText){
       appendInitialChild(parent,node.stateNode)
+    }else if(node.child != null){
+      node.child.return = node
+      node = node.child
+      continue
     }
 
     while (node.sibling == null) {
@@ -25,6 +29,9 @@ export function completeWork(current,workInProgress,renderLanes){
   const newProps = workInProgress.pendingProps;
   const _rootContainerInstance = getRootHostContainer()
   switch(workInProgress.tag){
+    case Fragment:
+      bubbleProperties(workInProgress)
+      return null
     case HostText:
       const newText = newProps;
       workInProgress.stateNode = createTextInstance(newText,_rootContainerInstance,{},workInProgress)

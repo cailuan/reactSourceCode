@@ -2,7 +2,7 @@ import { reconcileChildFibers,mountChildFibers } from "./ReactChildFiber";
 import { pushHostContainer } from "./ReactFiberHostContext";
 import { NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
-import { HostComponent, HostRoot, HostText } from "./ReactWorkTags";
+import { Fragment, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
 
 export function beginWork(current, workInProgress, renderLanes){
@@ -16,8 +16,16 @@ export function beginWork(current, workInProgress, renderLanes){
       return updateHostText(current, workInProgress)
     case HostComponent:
       return updateHostComponent(current, workInProgress, renderLanes)
+    case Fragment:
+      return updateFrament(current, workInProgress, renderLanes)
+
   }
 }
+function updateFrament(current, workInProgress, renderLanes){
+  const nextChildren =  workInProgress.pendingProps
+  reconcileChildren(current,workInProgress,nextChildren,renderLanes)
+  return workInProgress.child
+} 
 
 function updateHostRoot(current, workInProgress, renderLanes){
   pushHostRootContext(workInProgress)
@@ -60,6 +68,7 @@ export function reconcileChildren(current,workInProgress,nextChildren,renderLane
 
   }
 }
+
 
 function pushHostRootContext(workInProgress){
 
