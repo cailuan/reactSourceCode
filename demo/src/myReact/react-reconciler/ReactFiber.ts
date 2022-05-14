@@ -64,7 +64,11 @@ export function createFiberFromElement(element,mode,lanes){
 export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lanes){
   let fiberTag = IndeterminateComponent
   let resolvedType = type
-  if(typeof type === 'string'){
+  if(typeof type === 'function'){
+    if(shouldConstruct(type)){
+      // react class
+    }
+  }else if(typeof type === 'string'){
     fiberTag = HostComponent
   }else {
     getTag:switch(type){
@@ -86,4 +90,7 @@ export function createFiberFromFragment(elements,mode,lanes,key){
   return fiber
 }
 
-
+function shouldConstruct(Component){
+  const prototype = Component.prototype
+  return !!(prototype && prototype.isReactComponent)
+}

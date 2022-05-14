@@ -20,7 +20,7 @@ function commitMutationEffects_begin(root){
     let fiber = nextEffect;
     const child = fiber.child;
     // todo subtreeFlags (fiber.subtreeFlags & MutationMask) !== NoFlags  满足该条件
-    if(child != null && (MutationMask && fiber.subtreeFlags) !== NoFlags ){
+    if(child != null && ((MutationMask & fiber.subtreeFlags) !== NoFlags) ){
       nextEffect = child;
     }else{
       commitMutationEffects_complete(root)
@@ -85,6 +85,12 @@ function insertOrAppendPlacementNodeIntoContainer(node,before,parent){
       //todo
     }else{
       appendChildToContainer(parent, stateNode);
+    }
+  }else{
+    const child = node.child
+    if(child != null){
+      insertOrAppendPlacementNodeIntoContainer(child,before,parent)
+      //todo
     }
   }
 }

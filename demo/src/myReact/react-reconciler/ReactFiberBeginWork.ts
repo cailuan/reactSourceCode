@@ -2,14 +2,19 @@ import { reconcileChildFibers,mountChildFibers } from "./ReactChildFiber";
 import { pushHostContainer } from "./ReactFiberHostContext";
 import { NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
-import { Fragment, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
+import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
+import { PerformedWork } from "./ReactFiberFlags";
+import { renderWithHooks } from "./ReactFiberHooks";
+import { prepareToReadContext } from "./ReactFiberNewContext";
 
 export function beginWork(current, workInProgress, renderLanes){
 
   workInProgress.lanes = NoLanes
 
   switch(workInProgress.tag){
+    case IndeterminateComponent:
+      return mountIndeterminateComponent(current,workInProgress,workInProgress.type,renderLanes)
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes)
     case HostText:
@@ -21,6 +26,23 @@ export function beginWork(current, workInProgress, renderLanes){
 
   }
 }
+
+function mountIndeterminateComponent(_current,workInProgress,Component,renderLanes){
+  const props = workInProgress.pendingProps;
+  prepareToReadContext(workInProgress, renderLanes)
+  const value =  renderWithHooks(null,workInProgress,Component,props,{},renderLanes)
+  
+  workInProgress.flags |= PerformedWork
+
+  if(typeof value.render === 'function'){
+    // todo
+  }else{
+    workInProgress.tag = FunctionComponent
+    reconcileChildren(null,workInProgress,value,renderLanes)
+  }
+  return workInProgress.child
+}
+
 function updateFrament(current, workInProgress, renderLanes){
   const nextChildren =  workInProgress.pendingProps
   reconcileChildren(current,workInProgress,nextChildren,renderLanes)

@@ -1,5 +1,6 @@
-import { createRoot } from './client/ReactDOM'
+export { createRoot } from './client/ReactDOM'
 
+ 
 
 
 // const root :fiber= {
