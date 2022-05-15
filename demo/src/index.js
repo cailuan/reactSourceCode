@@ -23,6 +23,8 @@ const Host2 = ()=>{
   return <div>222222</div>
 }
 
-createRoot(rootEl).render(<div><Host></Host></div>);
+createRoot(rootEl).render(<div onClick={()=>{
+  console.log('999111')
+}}>11111</div>);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);

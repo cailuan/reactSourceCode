@@ -1,3 +1,5 @@
+import { registrationNameDependencies } from "../events/EventRegistry";
+
 const CHILDREN = 'children';
 const STYLE = 'style';
 
@@ -30,6 +32,12 @@ function setInitialDOMProperties(tag,domElement,rootContainerElement,nextProps,i
     if(propKey === CHILDREN){
       if(typeof nextProp === 'string'){
         setTextContent(domElement, nextProp)
+      }
+    }else if(registrationNameDependencies.hasOwnProperty(propKey)){
+      if(nextProp != null){
+        if(typeof nextProp != 'function'){
+          
+        }
       }
     }
   }

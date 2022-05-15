@@ -1,4 +1,5 @@
 import { createTextNode,createElement,setInitialProperties } from "./ReactDOMComponent"
+import { precacheFiberNode, updateFiberProps } from "./ReactDOMComponentTree";
 
 export function createTextInstance(text,rootContainerInstance,hostContext,internalInstanceHandle){
   const textNode = createTextNode(text,rootContainerInstance)
@@ -17,6 +18,8 @@ export function createInstance(type,props,rootContainerInstance,hostContext,inte
 
   }
   const domElement = createElement(type,props,rootContainerInstance,{})
+  precacheFiberNode(internalInstanceHandle,domElement)
+  updateFiberProps(domElement,props)
   return domElement
 }
 
