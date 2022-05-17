@@ -15,16 +15,19 @@ const rootEl1 = document.getElementById("root1");
 
 debugger
 const Host = ()=>{
-  debugger
-  const init = useState('1')
-  return <div>host</div>
+
+  const [initState,setInitState] = useState('1')
+  return <div onClick={()=>{setInitState('3')}}>host --- {initState}</div>
 }
 const Host2 = ()=>{
   return <div>222222</div>
 }
 
-createRoot(rootEl).render(<div onClick={()=>{
-  console.log('999111')
-}}>11111</div>);
+createRoot(rootEl).render(<div onClick={()=>{console.log('parent onClick')}} onClickCapture={()=>{
+  console.log('parent onClickCapture')
+}}><div onClick={()=>{
+  console.log('onClick')
+}} onClickCapture={()=>{console.log('onClickCapture')}}>parent
+ </div></div>);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);

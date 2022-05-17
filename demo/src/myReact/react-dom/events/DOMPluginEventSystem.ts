@@ -1,4 +1,4 @@
-import { addEventCaptureListener } from "./EventListener";
+import { addEventCaptureListener,addEventBubbleListener } from "./EventListener";
 import { allNativeEvents } from "./EventRegistry";
 import getEventTarget from "./getEventTarget";
 import { createEventListenerWrapperWithPriority } from "./ReactDOMEventListener";
@@ -17,6 +17,7 @@ export function listenToAllSupportedEvents(rootContainerElement){
   if(!rootContainerElement[listeningMarker]) {
     rootContainerElement[listeningMarker] = true
     allNativeEvents.forEach(event => {
+      listenToNativeEvent(event,false,rootContainerElement)
       listenToNativeEvent(event,true,rootContainerElement)
     });
   }
@@ -41,16 +42,27 @@ function listenToNativeEvent(domEventName,isCapturePhaseListener,target){
 
 function addTrappedEventListener(targetContainer,domEventName,eventSystemFlags,isCapturePhaseListener){
   //todo 添加事件
-  const lister = createEventListenerWrapperWithPriority(targetContainer,domEventName,eventSystemFlags)
+  const listener = createEventListenerWrapperWithPriority(targetContainer,domEventName,eventSystemFlags)
   let unsubscribeListener
   if(isCapturePhaseListener){
-    unsubscribeListener = addEventCaptureListener(targetContainer,domEventName,lister)
+    unsubscribeListener = addEventCaptureListener(targetContainer,domEventName,listener)
+  }else {
+    unsubscribeListener = addEventBubbleListener(targetContainer,domEventName,listener)
   }
 }
 
 function processDispatchQueueItemsInOrder(event,dispatchListeners,inCapturePhase){
   let previousInstance;
-  if (inCapturePhase) {}else{
+  if (inCapturePhase) {
+    for (let i = dispatchListeners.length - 1; i >= 0; i--) {
+      const {instance, currentTarget, listener} = dispatchListeners[i];
+      if (instance !== previousInstance && event.isPropagationStopped()) {
+        return;
+      }
+      executeDispatch(event, listener, currentTarget);
+      previousInstance = instance;
+    }
+  }else{
     for (let i = 0; i < dispatchListeners.length; i++) {
       const {instance, currentTarget, listener} = dispatchListeners[i];
       if(instance != previousInstance && event.isPropagationStopped()){
@@ -76,9 +88,10 @@ function extractEvents(dispatchQueue,domEventName,targetInst,nativeEvent,nativeE
 }
 
 function processDispatchQueue(dispatchQueue,eventSystemFlags){
+  const inCapturePhase =  (eventSystemFlags & IS_CAPTURE_PHASE) !== 0
   for (let i = 0; i < dispatchQueue.length; i++) {
     const {event, listeners} = dispatchQueue[i];
-    processDispatchQueueItemsInOrder(event, listeners, false);
+    processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
   }
 }
 

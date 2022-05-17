@@ -1,5 +1,5 @@
 import { topLevelEventsToReactNames ,registerSimpleEvents} from "../events/DOMEventProperties";
-import { accumulateSinglePhaseListeners } from "../events/DOMPluginEventSystem";
+import { accumulateSinglePhaseListeners, IS_CAPTURE_PHASE } from "../events/DOMPluginEventSystem";
 import { SyntheticMouseEvent,SyntheticEvent } from "../events/SyntheticEvent";
 
 export function extractEvents(dispatchQueue,domEventName,targetInst,nativeEvent,nativeEventTarget,eventSystemFlags,targetContainer){
@@ -15,8 +15,9 @@ export function extractEvents(dispatchQueue,domEventName,targetInst,nativeEvent,
       SyntheticEventCtor = SyntheticMouseEvent;
       break;
   }
-
-  const listeners = accumulateSinglePhaseListeners(targetInst,reactName,nativeEvent.type,false,false)
+  const inCapturePhase =  (eventSystemFlags &  IS_CAPTURE_PHASE) !== 0
+  const accumulateTargetOnly = false
+  const listeners = accumulateSinglePhaseListeners(targetInst,reactName,nativeEvent.type,inCapturePhase,accumulateTargetOnly,nativeEvent)
   if(listeners.length > 0){
     const event = new SyntheticEventCtor(reactName,reactEventType,null,nativeEvent,nativeEventTarget)
     

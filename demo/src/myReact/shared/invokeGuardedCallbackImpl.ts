@@ -28,7 +28,7 @@ if (
       'event',
     );
     function callCallback(){
-      console.log('callCallback')
+      // console.log('callCallback')
       didCall = true
       restoreAfterDispatch()
       func.apply(context,funcArgs)
