@@ -12,8 +12,20 @@ let currentlyRenderingFiber:any = null
 let hookTypesDev:any = null
 let InvalidNestedHooksDispatcherOnUpdateInDEV:any = null
 
+let hookTypesUpdateIndexDev = -1
+
 
 let currentHook:any = null
+
+function updateHookTypesDev(){
+  const hookName = currentHookNameInDev
+  if(hookTypesDev !== null){
+    hookTypesUpdateIndexDev++
+    if(hookTypesDev[hookTypesUpdateIndexDev] != hookName){
+        console.error('hooks error')
+    }
+  }
+}
 
 HooksDispatcherOnMountInDEV = {
   useState:(initialState)=>{
@@ -26,13 +38,18 @@ HooksDispatcherOnMountInDEV = {
     }finally{
       ReactCurrentDispatcher.current = prevDispatcher;
     }
+  },
+  useRef:(initialValue)=>{
+    currentHookNameInDev = 'useRef'
+    mountHookTypesDev()
+    return mountRef(initialValue)
   }
 }
 
 HooksDispatcherOnUpdateInDEV ={
   useState:(initialState)=>{
     currentHookNameInDev = 'useState';
-    // updateHookTypesDev()
+    updateHookTypesDev()
     const prevDispatcher = ReactCurrentDispatcher.current;
     ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
     try {
@@ -40,6 +57,11 @@ HooksDispatcherOnUpdateInDEV ={
     } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
     }
+  },
+  useRef:(initialValue)=>{
+    currentHookNameInDev = 'useRef';
+    updateHookTypesDev()
+    return updateRef(initialValue);
   }
 }
 
@@ -71,6 +93,17 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
       ReactCurrentDispatcher.current = prevDispatcher;
     }
   }
+}
+
+function mountRef(initialValue){
+  const hook = mountWorkInProgressHook()
+  const ref = {current: initialValue}
+  hook.memoizedState = ref;
+  return ref;
+}
+function updateRef(initialValue){
+  const hook = updateWorkInProgressHook()
+  return hook.memoizedState;
 }
 
 function mountState(initialState){
@@ -107,7 +140,11 @@ function updateWorkInProgressHook(){
   let nextWorkInProgressHook
   if(workInProgressHook == null) {
     nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
+  }else{
+    nextWorkInProgressHook = workInProgressHook.next
   }
+
+
   if(nextWorkInProgressHook!= null){
 
   }else{
@@ -124,6 +161,8 @@ function updateWorkInProgressHook(){
 
     if (workInProgressHook == null){
       currentlyRenderingFiber.memoizedState = workInProgressHook = newHook
+    }else{
+      workInProgressHook = workInProgressHook.next = newHook
     }
   }
   return workInProgressHook;
@@ -242,6 +281,8 @@ function mountWorkInProgressHook(){
   };
   if(workInProgressHook == null){
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook
+  }else{
+    workInProgressHook = workInProgressHook.next = hook
   }
   return workInProgressHook
 }
@@ -284,7 +325,7 @@ function dispatchAction(fiber,queue,action){
     const lastRenderedReducer = queue.lastRenderedReducer;
     if(lastRenderedReducer != null){
       let prevDispatcher  = ReactCurrentDispatcher.current
-      debugger
+
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         const currentState = queue.lastRenderedState
@@ -295,7 +336,7 @@ function dispatchAction(fiber,queue,action){
           return
         }
       }finally{
-        debugger
+    
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     }

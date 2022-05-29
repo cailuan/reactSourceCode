@@ -1,10 +1,14 @@
 import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild, prepareUpdate} from "../react-dom/client/ReactDOMHostConfig";
-import { Update } from "./ReactFiberFlags";
+import { Ref, RefStatic, Update } from "./ReactFiberFlags";
 import { getRootHostContainer } from "./ReactFiberHostContext";
 import { NoLanes } from "./ReactFiberLane";
 import { ProfileMode } from "./ReactTypeOfMode";
 import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 
+function markRef(workInProgress){
+  workInProgress.flags |= Ref
+  workInProgress.flags |= RefStatic
+}
 
 function markUpdate(workInProgress){
   workInProgress.flags |= Update
@@ -74,6 +78,11 @@ export function completeWork(current,workInProgress,renderLanes){
         appendAllChildren(instance, workInProgress, false, false)
         workInProgress.stateNode = instance
         finalizeInitialChildren(instance,type,newProps,_rootContainerInstance)
+
+
+        if (workInProgress.ref !== null) {
+          markRef(workInProgress)
+        }
       }
       
 

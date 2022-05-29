@@ -3,7 +3,7 @@ import { NormalPriority } from "../scheduler/SchedulerPriorities";
 import { DiscreteEventPriority, getCurrentUpdatePriority, lanesToEventPriority, setCurrentUpdatePriority } from "./ReactEventPriorities";
 import { createWorkInProgress } from "./ReactFiber";
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork'
-import { commitMutationEffects, commitBeforeMutationEffects } from "./ReactFiberCommitWork";
+import { commitMutationEffects, commitBeforeMutationEffects, commitLayoutEffects } from "./ReactFiberCommitWork";
 import { completeWork } from "./ReactFiberCompleteWork";
 import { scheduleMicrotask } from "./ReactFiberHostConfig";
 import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane } from "./ReactFiberLane"
@@ -71,7 +71,7 @@ function markUpdateLaneFromFiberToRoot(fiber,lane){
 function performSyncWorkOnRoot(root){
   const  lanes = getNextLanes(root , NoLanes)
   let exitStatus = renderRootSync(root,lanes)
-  debugger
+
   const finishedWork = root.current.alternate
   root.finishedWork = finishedWork
   root.finishedLanes = lanes
@@ -229,7 +229,9 @@ function commitRootImpl(root, renderPriorityLevel){
   commitBeforeMutationEffects(root, finishedWork)
   commitMutationEffects(root, finishedWork, lanes);
   root.current = finishedWork
-  // commitLayoutEffects(finishedWork, root, lanes);
+
+  commitLayoutEffects(finishedWork, root, lanes);
+  
   // onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
 
 }

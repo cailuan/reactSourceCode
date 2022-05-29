@@ -3,7 +3,7 @@
 
 import { createRoot } from "./myReact/react-dom";
 import App from "./demo_0";
-import { useState } from "./myReact/react";
+import { useState,useRef } from "./myReact/react";
 // import {createRoot} from "./myReact/react-dom/client/ReactDOMRoot"
 
 const rootEl = document.getElementById("root");
@@ -17,7 +17,10 @@ debugger
 const Host = ()=>{
   debugger
   const [initState,setInitState] = useState(1)
-  return <div id="text" onClick={()=>{
+  const hookRef = useRef(null)
+  return <div id="text"
+  ref={hookRef}
+  onClick={()=>{
   debugger
     setInitState(1 + initState);
     setInitState(2+initState)
@@ -30,6 +33,15 @@ const Host2 = ()=>{
   return <div>222222</div>
 }
 
-createRoot(rootEl).render(<Host/ >);
+
+const RefHook = ()=>{
+  debugger
+  const [initState,setInitState] = useState(1)
+  const hookRef = useRef(null)
+  const ref2 = useRef(null)
+  return <div ref={hookRef} onClick={()=> { debugger; ref2.current = (init)=>{ return init + 1} ;setInitState(ref2.current) }}>{initState}</div>
+}
+
+createRoot(rootEl).render(<RefHook/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);

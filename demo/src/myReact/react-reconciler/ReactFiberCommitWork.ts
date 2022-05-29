@@ -1,6 +1,6 @@
 import { appendChildToContainer, commitUpdate } from "../react-dom/client/ReactDOMHostConfig"
-import { MutationMask, NoFlags, Placement, Update } from "./ReactFiberFlags"
-import { NoLanes } from "./ReactFiberLane"
+import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref } from "./ReactFiberFlags"
+import { NoLane, NoLanes } from "./ReactFiberLane"
 import { HostComponent, HostRoot, HostText } from "./ReactWorkTags"
 
 let nextEffect:any = null
@@ -63,7 +63,6 @@ function getHostParentFiber(fiber){
 }
 
 export function commitPlacement(finishedWork){
-  debugger
   const parentFiber = getHostParentFiber(finishedWork);
   let parent;
   let isContainer;
@@ -130,5 +129,67 @@ export function commitWork(current,finishedWork){
         }
       }
       return
+  }
+}
+
+
+export function commitLayoutEffects(finishedWork,root,committedLanes){
+  nextEffect = finishedWork;
+  commitLayoutEffects_begin(finishedWork, root, committedLanes)
+}
+
+function commitLayoutEffects_begin(subtreeRoot,root,committedLanes){
+  while (nextEffect != null) {
+    const fiber = nextEffect;
+    const firstChild = fiber.child;
+    if((fiber.subtreeFlags & LayoutMask) != NoFlags && firstChild != null){
+      nextEffect = firstChild;
+    }else{
+      commitLayoutMountEffects_complete(subtreeRoot,root,committedLanes)
+    }
+  }
+}
+
+function commitLayoutMountEffects_complete(subtreeRoot,root,committedLanes){
+  while(nextEffect != null){
+    const fiber = nextEffect;
+    if((fiber.flags & LayoutMask) != NoFlags){
+      const current = fiber.alternate;
+      commitLayoutEffectOnFiber(root, current, fiber, committedLanes)
+    }
+    nextEffect = fiber.return;
+  }
+  
+}
+
+function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLanes){
+  if((finishedWork.flags & (Update | Callback))!=NoLane){
+    switch(finishedWork.tag){
+      case HostComponent:
+        const instance = finishedWork.stateNode
+        if(current == null && finishedWork.flags & Update){
+          const type = finishedWork.type;
+          const props = finishedWork.memoizedProps;
+          debugger
+          // commitMount(instance, type, props, finishedWork);
+        }
+    }
+  }
+
+  if(finishedWork.flags & Ref){
+    commitAttachRef(finishedWork)
+  }
+}
+
+function commitAttachRef(finishedWork){
+  debugger
+  const ref = finishedWork.ref;
+  if (ref !== null) {
+    const instance = finishedWork.stateNode;
+    if(typeof ref == 'function'){
+
+    }else{
+      ref.current = instance
+    }
   }
 }

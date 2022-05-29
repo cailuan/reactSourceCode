@@ -3,8 +3,15 @@ import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "../shared/ReactSymbols"
 import { createFiberFromText,createFiberFromElement, createWorkInProgress } from "./ReactFiber"
 import { Placement } from "./ReactFiberFlags"
 
+
+function coerceRef(returnFiber,current,element){
+  const mixedRef = element.ref;
+  return mixedRef
+}
+
 export const reconcileChildFibers = ChildReconciler(true)
 export const mountChildFibers = ChildReconciler(false)
+
 
 function ChildReconciler(shouldTrackSideEffects){
 
@@ -37,6 +44,7 @@ function ChildReconciler(shouldTrackSideEffects){
           if(child.elementType == elementType){
   
             const existing = uFiber(child, element.props)
+            existing.ref =  coerceRef(returnFiber,child,element)
             existing.return = returnFiber;
             return existing;
           }
@@ -47,6 +55,7 @@ function ChildReconciler(shouldTrackSideEffects){
     if(element.$$typeof === REACT_ELEMENT_TYPE){
       
       const created =  createFiberFromElement(element,returnFiber.mode,lanes)
+      created.ref = coerceRef(returnFiber,currentFirstChild,element)
       console.log(created,'createFiberFromElement')
       created.return = returnFiber
       return created
@@ -132,12 +141,12 @@ function ChildReconciler(shouldTrackSideEffects){
 
 export function cloneChildFibers(current,workInProgress){
   let currentChild = workInProgress.child;
-  debugger
+
   let newChild = createWorkInProgress(currentChild,currentChild.pendingProps)
   workInProgress.child = newChild;
   newChild.return = workInProgress;
   while (currentChild.sibling != null) {
-    debugger
+  
   }
   newChild.sibling = null;
 }

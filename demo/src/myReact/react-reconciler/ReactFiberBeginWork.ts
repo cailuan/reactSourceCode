@@ -4,7 +4,7 @@ import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
 import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
-import { PerformedWork } from "./ReactFiberFlags";
+import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks } from "./ReactFiberHooks";
 import { prepareToReadContext } from "./ReactFiberNewContext";
 
@@ -12,6 +12,16 @@ function bailoutOnAlreadyFinishedWork(current,workInProgress,renderLanes){
   cloneChildFibers(current,workInProgress)
 
   return workInProgress.child;
+}
+
+function markRef(current,workInProgress){
+  const ref = workInProgress.ref;
+  debugger
+  if((current == null  && ref != null) || (current != null && current.ref != ref )){
+    workInProgress.flags |= Ref
+    workInProgress.flags |= RefStatic
+  }
+
 }
 
 export function beginWork(current, workInProgress, renderLanes){
@@ -106,6 +116,7 @@ function updateHostComponent(current,workInProgress ,renderLanes ){
   if(isDirectTextChild){
     nextChildren = null;
   }
+  markRef(current,workInProgress)
   reconcileChildren(current,workInProgress,nextChildren,renderLanes)
   return workInProgress.child;
 }
