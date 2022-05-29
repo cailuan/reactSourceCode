@@ -54,3 +54,11 @@ export function getNextLanes(root,lane?:number){
   const nextLanes = getHighestPriorityLane(nonIdlePendingLanes)
   return nextLanes
 }
+
+export function markRootFinished(root,remainingLanes){
+  root.pendingLanes = 0;
+}
+
+export function includesSomeLane(a,b){
+  return (a & b) != NoLanes
+}

@@ -1,4 +1,4 @@
-import { appendChildToContainer } from "../react-dom/client/ReactDOMHostConfig"
+import { appendChildToContainer, commitUpdate } from "../react-dom/client/ReactDOMHostConfig"
 import { MutationMask, NoFlags, Placement, Update } from "./ReactFiberFlags"
 import { NoLanes } from "./ReactFiberLane"
 import { HostComponent, HostRoot, HostText } from "./ReactWorkTags"
@@ -50,6 +50,10 @@ function commitMutationEffectsOnFiber(finishedWork,root){
       commitPlacement(finishedWork)
       finishedWork.flags &= ~Placement;
       break;
+    case Update:
+      const current = finishedWork.alternate;
+      commitWork(current,finishedWork)
+      break
   }
 }
 
@@ -92,5 +96,39 @@ function insertOrAppendPlacementNodeIntoContainer(node,before,parent){
       insertOrAppendPlacementNodeIntoContainer(child,before,parent)
       //todo
     }
+  }
+}
+
+
+
+export function commitBeforeMutationEffects(root,firstChild){
+
+}
+
+
+export function commitWork(current,finishedWork){
+  switch(finishedWork.tag){
+    case HostComponent:
+      const instance = finishedWork.stateNode;
+      if(instance != null){
+        const newProps = finishedWork.memoizedProps;
+        const oldProps = current !== null ? current.memoizedProps : newProps;
+        const type = finishedWork.type;
+        const updatePayload = finishedWork.updateQueue
+        finishedWork.updateQueue = null;
+        if(updatePayload != null){
+          
+          commitUpdate(
+            instance,
+            updatePayload,
+            type,
+            oldProps,
+            newProps,
+            finishedWork
+          )
+          
+        }
+      }
+      return
   }
 }

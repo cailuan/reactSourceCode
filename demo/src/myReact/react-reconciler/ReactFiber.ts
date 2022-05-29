@@ -18,7 +18,7 @@ function FiberNode(tag,pendingProps,key,mode){
   this.key = key;
   this.mode = mode;
   this.pendingProps = pendingProps;
-  this.lane =  NoLanes;
+  this.lanes =  NoLanes;
   this.pendingLanes = NoLanes
   this.flags = NoFlags
   this.subtreeFlags = NoFlags
@@ -29,9 +29,18 @@ export function createWorkInProgress(current,pendingProps){
   let workInProgress = current.alternate;
   if(workInProgress === null || workInProgress === undefined){
     workInProgress = createFiber(current.tag,pendingProps,current.key,current.mode)
+    workInProgress.elementType = current.elementType;
+    workInProgress.type = current.type;
+    workInProgress.stateNode = current.stateNode;
     workInProgress.stateNode = current.stateNode
     workInProgress.alternate = current;
     current.alternate = workInProgress;
+  }else{
+    workInProgress.pendingProps = pendingProps;
+    workInProgress.type = current.type;
+    workInProgress.flags = NoFlags;
+    workInProgress.subtreeFlags = NoFlags;
+    
   }
 
   workInProgress.lanes = current.lanes;

@@ -1,11 +1,14 @@
 import { scheduleCallback } from "../scheduler/scheduler";
 import { NormalPriority } from "../scheduler/SchedulerPriorities";
-import { lanesToEventPriority } from "./ReactEventPriorities";
+import { DiscreteEventPriority, getCurrentUpdatePriority, lanesToEventPriority, setCurrentUpdatePriority } from "./ReactEventPriorities";
 import { createWorkInProgress } from "./ReactFiber";
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork'
-import { commitMutationEffects } from "./ReactFiberCommitWork";
+import { commitMutationEffects, commitBeforeMutationEffects } from "./ReactFiberCommitWork";
 import { completeWork } from "./ReactFiberCompleteWork";
-import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane } from "./ReactFiberLane"
+import { scheduleMicrotask } from "./ReactFiberHostConfig";
+import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished } from "./ReactFiberLane"
+import { scheduleSyncCallback,flushSyncCallbacks } from "./ReactFiberSyncTaskQueue";
+import { LegacyRoot } from "./ReactRootTags";
 import { ConcurrentMode, NoMode } from "./ReactTypeOfMode";
 
 const RootIncomplete = 0;
@@ -33,6 +36,11 @@ export function requestUpdateLane(fiber){
   if( (mode & ConcurrentMode) === NoMode ){
     return SyncLane
   } 
+  const updateLane =  getCurrentUpdatePriority()
+  if(updateLane != NoLanes){
+    return updateLane
+  }
+
   return DefaultLane
 }
   
@@ -46,7 +54,11 @@ export function scheduleUpdateOnFiber(fiber,lane,eventTime){
 }
 
 function markUpdateLaneFromFiberToRoot(fiber,lane){
-  fiber.lane = mergeLanes(fiber.lane , lane)
+  fiber.lanes = mergeLanes(fiber.lanes , lane)
+  const alternate = fiber.alternate
+  if(alternate != null){
+    alternate.lanes = mergeLanes(alternate.lanes,lane)
+  }
   let node = fiber
   let parent = node.return
   while(parent != null){
@@ -56,20 +68,42 @@ function markUpdateLaneFromFiberToRoot(fiber,lane){
   return node.stateNode
 }
 
+function performSyncWorkOnRoot(root){
+  const  lanes = getNextLanes(root , NoLanes)
+  let exitStatus = renderRootSync(root,lanes)
+  debugger
+  const finishedWork = root.current.alternate
+  root.finishedWork = finishedWork
+  root.finishedLanes = lanes
+  commitRoot(root)
+}
 
 function ensureRootIsScheduled(root,currentTime){
-  const nextLanes = getNextLanes(root)
+  const nextLanes = getNextLanes(root ,root == workInProgressRoot ? workInProgressRootRenderLanes : NoLanes )
+  let newCallbackNode
   markStarvedLanesAsExpired(root, currentTime)
   var newCallbackPriority = getHighestPriorityLane(nextLanes)
 
   var schedulerPriorityLevel
-  switch(lanesToEventPriority(nextLanes)){
-    case DefaultLane:
-      schedulerPriorityLevel = NormalPriority
-      break
+  if(newCallbackPriority == SyncLane){
+    if(root.tag == LegacyRoot){
+
+    }else{
+      scheduleSyncCallback(performSyncWorkOnRoot.bind(null,root))
+    }
+    scheduleMicrotask(flushSyncCallbacks)
+    newCallbackNode = null
+  }else{
+    switch(lanesToEventPriority(nextLanes)){
+      case DefaultLane:
+        schedulerPriorityLevel = NormalPriority
+        break
+    }
+     newCallbackNode =  scheduleCallback(schedulerPriorityLevel,performConcurrentWorkOnRoot.bind(null,root))
   }
   
-  const newCallbackNode =  scheduleCallback(schedulerPriorityLevel,performConcurrentWorkOnRoot.bind(null,root))
+  
+
   root.callbackNode = newCallbackNode
 
 }
@@ -170,8 +204,15 @@ function finishConcurrentRender(root, exitStatus, lanes){
 
 
 function commitRoot(root){
-  commitRootImpl(root,0)
-  return null
+  const previousUpdateLanePriority = getCurrentUpdatePriority()
+  try{
+    setCurrentUpdatePriority(DiscreteEventPriority)
+    commitRootImpl(root,previousUpdateLanePriority)
+    return null
+  }finally{
+    setCurrentUpdatePriority(previousUpdateLanePriority)
+  }
+ 
 }
 
 function commitRootImpl(root, renderPriorityLevel){
@@ -179,6 +220,8 @@ function commitRootImpl(root, renderPriorityLevel){
   const lanes = root.finishedLanes
   root.finishedWork = null
   root.finishedLanes = NoLanes
+  markRootFinished(root,0)
+  commitBeforeMutationEffects(root, finishedWork)
   commitMutationEffects(root, finishedWork, lanes);
   root.current = finishedWork
   // commitLayoutEffects(finishedWork, root, lanes);

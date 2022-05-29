@@ -1,14 +1,20 @@
 import ReactSharedInternals from "../shared/ReactSharedInternals"
 import { NoLanes } from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
-import { requestEventTime, requestUpdateLane } from "./ReactFiberWorkLoop";
+import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 const {ReactCurrentDispatcher} = ReactSharedInternals
 
 let currentHookNameInDev:string|null = null
 let HooksDispatcherOnMountInDEV:any = null
+let HooksDispatcherOnUpdateInDEV:any = null
 let workInProgressHook:any = null
 let currentlyRenderingFiber:any = null
 let hookTypesDev:any = null
+let InvalidNestedHooksDispatcherOnUpdateInDEV:any = null
+
+
+let currentHook:any = null
+
 HooksDispatcherOnMountInDEV = {
   useState:(initialState)=>{
     currentHookNameInDev = 'useState'
@@ -18,6 +24,35 @@ HooksDispatcherOnMountInDEV = {
     try{
       return mountState(initialState)
     }finally{
+      ReactCurrentDispatcher.current = prevDispatcher;
+    }
+  }
+}
+
+HooksDispatcherOnUpdateInDEV ={
+  useState:(initialState)=>{
+    currentHookNameInDev = 'useState';
+    // updateHookTypesDev()
+    const prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+    try {
+      return updateState(initialState);
+    } finally {
+      ReactCurrentDispatcher.current = prevDispatcher;
+    }
+  }
+}
+
+
+InvalidNestedHooksDispatcherOnUpdateInDEV = {
+  useState : (initialState)=>{
+    currentHookNameInDev = 'useState';
+    // updateHookTypesDev()
+    const prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+    try {
+      return updateState(initialState);
+    } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
     }
   }
@@ -45,7 +80,7 @@ function mountState(initialState){
   }
   hook.memoizedState = hook.baseState = initialState
 
-  const quene:any = {
+  const quene:any  =  hook.queue = {
     pending : null,
     interleaved: null,
     lanes : NoLanes,
@@ -58,6 +93,95 @@ function mountState(initialState){
 
   return [hook.memoizedState,dispatch]
 
+}
+function updateWorkInProgressHook(){
+  let nextCurrentHook
+  if(currentHook == null){
+    const current = currentlyRenderingFiber.alternate;
+    if(current != null){
+      nextCurrentHook = current.memoizedState;
+    }
+  }else{
+    nextCurrentHook = currentHook.next;
+  }
+  let nextWorkInProgressHook
+  if(workInProgressHook == null) {
+    nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
+  }
+  if(nextWorkInProgressHook!= null){
+
+  }else{
+    currentHook  = nextCurrentHook
+    const newHook = {
+      memoizedState: currentHook.memoizedState,
+
+      baseState: currentHook.baseState,
+      baseQueue: currentHook.baseQueue,
+      queue: currentHook.queue,
+
+      next: null,
+    };
+
+    if (workInProgressHook == null){
+      currentlyRenderingFiber.memoizedState = workInProgressHook = newHook
+    }
+  }
+  return workInProgressHook;
+  
+}
+
+function updateReducer(reducer,initialArg,init?:any){
+  const hook = updateWorkInProgressHook();
+  const queue = hook.queue;
+  queue.lastRenderedReducer = reducer
+  const current = currentHook
+  let baseQueue = current.baseQueue;
+  const pendingQueue = queue.pending;
+  if(pendingQueue != null){
+
+  }
+  current.baseQueue = baseQueue = pendingQueue;
+  queue.pending = null;
+
+  if(baseQueue != null){
+    const first = baseQueue.next;
+    let newState = current.baseState;
+    let newBaseState = null;
+    let newBaseQueueFirst = null;
+    let newBaseQueueLast = null;
+    let update = first;
+    do{
+      const updateLane = update.lane;
+      if(update.eagerReducer == reducer){
+        newState = update.eagerState
+      }else{
+        const action = update.action;
+        newState = reducer(newState, action);
+      }
+      update = update.next
+    } while(update != null && update != first)
+    if(newBaseQueueLast === null){
+      newBaseState = newState
+    }
+    if(!Object.is(newState , hook.memoizedState)){
+      // markWorkInProgressReceivedUpdate()
+    }
+    hook.memoizedState = newState
+    hook.baseState = newBaseState
+    hook.baseQueue = newBaseQueueLast
+    queue.lastRenderedState = newState;
+
+  }
+
+  if(baseQueue == null){
+    queue.lanes = NoLanes
+  }
+  const dispatch = queue.dispatch
+  return [hook.memoizedState, dispatch]
+
+}
+function updateState(initialState){
+  return updateReducer(basicStateReducer,initialState)
 }
 
 function throwInvalidHookError() {
@@ -91,10 +215,18 @@ export const ContextOnlyDispatcher:any = {
 
 export function renderWithHooks(current,workInProgress,Component,props,secondArg,nextRenderLanes){
   currentlyRenderingFiber = workInProgress
+  workInProgress.memoizedState = null;
   workInProgress.lanes = NoLanes
-  ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV
+  if (current !== null && current.memoizedState !== null) {
+    ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
+  }else{
+    ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV
+  }
+  
   let children = Component(props, secondArg)
   ReactCurrentDispatcher.current = ContextOnlyDispatcher
+  currentHook = null;
+  workInProgressHook = null;
   return children
 }
 
@@ -124,12 +256,48 @@ function mountHookTypesDev(){
 }
 
 function basicStateReducer(state,action){
-  return typeof action === 'function' ? action(state) : state
+  return typeof action === 'function' ? action(state) : action
 } 
 
 
 function dispatchAction(fiber,queue,action){
   const eventTime = requestEventTime()
   const lane = requestUpdateLane(fiber)
-  // todo 
+  const update:any = {
+    lane,
+    action,
+    eagerReducer : null,
+    eagerState : null,
+    next:null
+  }
+  const alternate = fiber.alternate;
+
+  const pedding = queue.pedding
+  if(pedding == null){
+    update.next = update
+  }else {
+    
+  }
+  queue.pending = update;
+  if(fiber.lanes === NoLanes && (alternate == null || alternate.lanes == NoLanes) ){
+    const lastRenderedReducer = queue.lastRenderedReducer;
+    if(lastRenderedReducer != null){
+      let prevDispatcher  = ReactCurrentDispatcher.current
+      debugger
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        const currentState = queue.lastRenderedState
+        const eagerState = lastRenderedReducer(currentState,action)
+        update.eagerReducer = lastRenderedReducer
+        update.eagerState = eagerState;
+        if(Object.is(eagerState, currentState)){
+          return
+        }
+      }finally{
+        debugger
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    }
+  }
+  scheduleUpdateOnFiber(fiber,lane,eventTime)
 }

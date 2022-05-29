@@ -1,6 +1,6 @@
 import isArray from "../shared/isArray"
 import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "../shared/ReactSymbols"
-import { createFiberFromText,createFiberFromElement } from "./ReactFiber"
+import { createFiberFromText,createFiberFromElement, createWorkInProgress } from "./ReactFiber"
 import { Placement } from "./ReactFiberFlags"
 
 export const reconcileChildFibers = ChildReconciler(true)
@@ -8,6 +8,12 @@ export const mountChildFibers = ChildReconciler(false)
 
 function ChildReconciler(shouldTrackSideEffects){
 
+  function uFiber(fiber,pendingProps){
+    const clone = createWorkInProgress(fiber,pendingProps)
+    clone.index = 0;
+    clone.sibling = null;
+    return clone
+  }
   function placeSingleChild(newFiber){
     if(shouldTrackSideEffects && newFiber.alternate == null){
       newFiber.flags |= Placement
@@ -21,6 +27,23 @@ function ChildReconciler(shouldTrackSideEffects){
   }
   function reconcileSingleElement(returnFiber,currentFirstChild,element,lanes){
     let child = currentFirstChild
+    let key = element.key
+    while(child != null){
+      if(child.key == key){
+        const elementType = element.type;
+        if(elementType == REACT_FRAGMENT_TYPE){
+
+        }else{
+          if(child.elementType == elementType){
+  
+            const existing = uFiber(child, element.props)
+            existing.return = returnFiber;
+            return existing;
+          }
+        }
+      }
+    }
+
     if(element.$$typeof === REACT_ELEMENT_TYPE){
       
       const created =  createFiberFromElement(element,returnFiber.mode,lanes)
@@ -105,4 +128,16 @@ function ChildReconciler(shouldTrackSideEffects){
     return deleteRemainingChildren(returnFiber,currentFirstChild)
   }
   return reconcileChildFibers
+}
+
+export function cloneChildFibers(current,workInProgress){
+  let currentChild = workInProgress.child;
+  debugger
+  let newChild = createWorkInProgress(currentChild,currentChild.pendingProps)
+  workInProgress.child = newChild;
+  newChild.return = workInProgress;
+  while (currentChild.sibling != null) {
+    debugger
+  }
+  newChild.sibling = null;
 }

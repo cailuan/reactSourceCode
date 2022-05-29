@@ -1,3 +1,5 @@
+import { DiscreteEventPriority, getCurrentUpdatePriority, setCurrentUpdatePriority } from "../../react-reconciler/ReactEventPriorities";
+
 let isInsideEventHandler = false;
 let isBatchingEventUpdates = false;
 
@@ -8,7 +10,15 @@ let batchedUpdatesImpl = function(fn, bookkeeping,c?:any) {
 let batchedEventUpdatesImpl = batchedUpdatesImpl;
 
 let discreteUpdatesImpl = function(fn, a, b, c, d) {
-  return fn(a, b, c, d);
+  // react-dom/src/events/ReactDOMUpdateBatching.js discreteUpdates
+  const previousPriority =  getCurrentUpdatePriority()
+  try{
+    setCurrentUpdatePriority(DiscreteEventPriority)
+    return fn(a, b, c, d);
+  } finally{
+    setCurrentUpdatePriority(previousPriority)
+  }
+  
 };
 
 

@@ -1,8 +1,27 @@
-import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild} from "../react-dom/client/ReactDOMHostConfig";
+import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild, prepareUpdate} from "../react-dom/client/ReactDOMHostConfig";
+import { Update } from "./ReactFiberFlags";
 import { getRootHostContainer } from "./ReactFiberHostContext";
 import { NoLanes } from "./ReactFiberLane";
 import { ProfileMode } from "./ReactTypeOfMode";
-import { Fragment, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
+import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
+
+
+function markUpdate(workInProgress){
+  workInProgress.flags |= Update
+}
+
+let updateHostComponent = function(current,workInProgress,type,newProps,rootContainerInstance){
+  const oldProps = current.memoizedProps;
+  if(oldProps === newProps){
+    return
+  }
+  const instance = workInProgress.stateNode
+  const updatePayload = prepareUpdate(instance,type,oldProps,newProps,rootContainerInstance,{})
+  workInProgress.updateQueue = updatePayload
+  if(updatePayload){
+    markUpdate(workInProgress)
+  }
+}
 
 const appendAllChildren = function(parent,workInProgress,needsVisibilityToggle,isHidden){
   let node = workInProgress.child;
@@ -29,6 +48,9 @@ export function completeWork(current,workInProgress,renderLanes){
   const newProps = workInProgress.pendingProps;
   const _rootContainerInstance = getRootHostContainer()
   switch(workInProgress.tag){
+    case FunctionComponent:
+      bubbleProperties(workInProgress)
+      return null
     case Fragment:
       bubbleProperties(workInProgress)
       return null
@@ -42,12 +64,19 @@ export function completeWork(current,workInProgress,renderLanes){
       bubbleProperties(workInProgress)
       break
     case HostComponent:
+      const rootContainerInstance = getRootHostContainer();
+      const type = workInProgress.type;
+      if(current != null && workInProgress.stateNode != null){
+
+        updateHostComponent(current,workInProgress,type,newProps,rootContainerInstance)
+      }else{
+        const instance = createInstance(type,newProps,_rootContainerInstance,{},workInProgress)
+        appendAllChildren(instance, workInProgress, false, false)
+        workInProgress.stateNode = instance
+        finalizeInitialChildren(instance,type,newProps,_rootContainerInstance)
+      }
       
-      const type = workInProgress.type
-      const instance = createInstance(type,newProps,_rootContainerInstance,{},workInProgress)
-      appendAllChildren(instance, workInProgress, false, false)
-      workInProgress.stateNode = instance
-      finalizeInitialChildren(instance,type,newProps,_rootContainerInstance)
+
       bubbleProperties(workInProgress)
       return null
   }
@@ -66,6 +95,14 @@ function bubbleProperties(completedWork){
       }
     }
 
+    completedWork.subtreeFlags |= subtreeFlags
+  }else{
+    if((completedWork.mode & ProfileMode ) != NoLanes){
+      let child = completedWork.child;
+      while(child != null){
+        
+      }
+    }
     completedWork.subtreeFlags |= subtreeFlags
   }
   return didBailout

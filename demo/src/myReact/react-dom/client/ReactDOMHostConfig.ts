@@ -1,4 +1,4 @@
-import { createTextNode,createElement,setInitialProperties } from "./ReactDOMComponent"
+import { createTextNode,createElement,setInitialProperties, diffProperties, updateProperties } from "./ReactDOMComponent"
 import { precacheFiberNode, updateFiberProps } from "./ReactDOMComponentTree";
 
 export function createTextInstance(text,rootContainerInstance,hostContext,internalInstanceHandle){
@@ -29,4 +29,18 @@ export function finalizeInitialChildren(domElement,type,props,rootContainerInsta
 
 export function appendInitialChild(parentInstance,child){
   parentInstance.appendChild(child);
+}
+
+
+export function prepareUpdate(domElement,type,oldProps,newProps,rootContainerInstance,hostContext){
+
+  return diffProperties(domElement,type,oldProps,newProps,rootContainerInstance)
+  
+}
+
+
+export function commitUpdate(domElement,updatePayload,type,oldProps,newProps,internalInstanceHandle){
+  updateFiberProps(domElement,newProps)
+  updateProperties(domElement, updatePayload, type, oldProps, newProps)
+  
 }
