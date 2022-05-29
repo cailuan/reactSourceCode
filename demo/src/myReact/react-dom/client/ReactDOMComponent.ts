@@ -1,4 +1,5 @@
 import { registrationNameDependencies } from "../events/EventRegistry";
+import { setValueForProperty } from "./DOMPropertyOperations";
 
 const CHILDREN = 'children';
 const STYLE = 'style';
@@ -41,6 +42,9 @@ function setInitialDOMProperties(tag,domElement,rootContainerElement,nextProps,i
           
         }
       }
+    }else if(nextProp != null){
+      setValueForProperty(domElement,propKey,nextProp,isCustomComponentTag)
+      
     }
   }
 }

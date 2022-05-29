@@ -17,10 +17,13 @@ debugger
 const Host = ()=>{
   debugger
   const [initState,setInitState] = useState(1)
-  return <div onClick={()=>{
+  return <div id="text" onClick={()=>{
   debugger
     setInitState(1 + initState);
     setInitState(2+initState)
+    setTimeout(()=>{
+      setInitState(5+initState)
+    },2)
     console.log('host')}}>{initState}</div>
 }
 const Host2 = ()=>{
