@@ -138,10 +138,10 @@ function updateReducer(reducer,initialArg,init?:any){
   let baseQueue = current.baseQueue;
   const pendingQueue = queue.pending;
   if(pendingQueue != null){
-
+    current.baseQueue = baseQueue = pendingQueue;
+    queue.pending = null;
   }
-  current.baseQueue = baseQueue = pendingQueue;
-  queue.pending = null;
+  
 
   if(baseQueue != null){
     const first = baseQueue.next;
@@ -272,11 +272,12 @@ function dispatchAction(fiber,queue,action){
   }
   const alternate = fiber.alternate;
 
-  const pedding = queue.pedding
-  if(pedding == null){
+  const pending = queue.pending
+  if(pending == null){
     update.next = update
   }else {
-    
+    update.next = pending.next
+    pending.next = update
   }
   queue.pending = update;
   if(fiber.lanes === NoLanes && (alternate == null || alternate.lanes == NoLanes) ){

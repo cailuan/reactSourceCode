@@ -6,7 +6,7 @@ import {beginWork as originalBeginWork} from './ReactFiberBeginWork'
 import { commitMutationEffects, commitBeforeMutationEffects } from "./ReactFiberCommitWork";
 import { completeWork } from "./ReactFiberCompleteWork";
 import { scheduleMicrotask } from "./ReactFiberHostConfig";
-import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished } from "./ReactFiberLane"
+import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane } from "./ReactFiberLane"
 import { scheduleSyncCallback,flushSyncCallbacks } from "./ReactFiberSyncTaskQueue";
 import { LegacyRoot } from "./ReactRootTags";
 import { ConcurrentMode, NoMode } from "./ReactTypeOfMode";
@@ -82,7 +82,11 @@ function ensureRootIsScheduled(root,currentTime){
   const nextLanes = getNextLanes(root ,root == workInProgressRoot ? workInProgressRootRenderLanes : NoLanes )
   let newCallbackNode
   markStarvedLanesAsExpired(root, currentTime)
-  var newCallbackPriority = getHighestPriorityLane(nextLanes)
+  const newCallbackPriority = getHighestPriorityLane(nextLanes)
+  const existingCallbackPriority = root.callbackPriority;
+  if (existingCallbackPriority === newCallbackPriority) {
+    return
+  }
 
   var schedulerPriorityLevel
   if(newCallbackPriority == SyncLane){
@@ -103,7 +107,7 @@ function ensureRootIsScheduled(root,currentTime){
   }
   
   
-
+  root.callbackPriority = newCallbackPriority
   root.callbackNode = newCallbackNode
 
 }
@@ -220,6 +224,7 @@ function commitRootImpl(root, renderPriorityLevel){
   const lanes = root.finishedLanes
   root.finishedWork = null
   root.finishedLanes = NoLanes
+  root.callbackPriority = NoLane
   markRootFinished(root,0)
   commitBeforeMutationEffects(root, finishedWork)
   commitMutationEffects(root, finishedWork, lanes);

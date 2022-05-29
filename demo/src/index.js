@@ -19,7 +19,9 @@ const Host = ()=>{
   const [initState,setInitState] = useState(1)
   return <div onClick={()=>{
   debugger
-    setInitState(1 + initState);console.log('host')}}>{initState}</div>
+    setInitState(1 + initState);
+    setInitState(2+initState)
+    console.log('host')}}>{initState}</div>
 }
 const Host2 = ()=>{
   return <div>222222</div>
