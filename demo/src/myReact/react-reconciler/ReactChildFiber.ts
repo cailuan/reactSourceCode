@@ -2,6 +2,7 @@ import isArray from "../shared/isArray"
 import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "../shared/ReactSymbols"
 import { createFiberFromText,createFiberFromElement, createWorkInProgress } from "./ReactFiber"
 import { Placement } from "./ReactFiberFlags"
+import { HostText } from "./ReactWorkTags";
 
 
 function coerceRef(returnFiber,current,element){
@@ -65,6 +66,12 @@ function ChildReconciler(shouldTrackSideEffects){
     if(!shouldTrackSideEffects){
       return null
     }
+    let childToDelete = currentFirstChild;
+    while(childToDelete != null){
+
+    }
+    return null
+
   }
   function createChild(returnFiber,newChild,lanes){
     if(typeof newChild == 'string' || typeof newChild == 'number'){
@@ -86,8 +93,19 @@ function ChildReconciler(shouldTrackSideEffects){
   function placeChild(newFiber,lastPlacedIndex,newIdx){
     newFiber.index = newIdx
     if(!shouldTrackSideEffects) return lastPlacedIndex
-    newFiber.flags |= Placement
+    const current = newFiber.alternate;
+    if(current != null){
+      const oldIndex = current.index;
+      if(oldIndex < lastPlacedIndex){
+debugger
+      }else{
+        return oldIndex
+      }
+    }else{
+      newFiber.flags |= Placement
     return lastPlacedIndex
+    }
+    
     
   }
 
@@ -97,6 +115,42 @@ function ChildReconciler(shouldTrackSideEffects){
     let resultingFirstChild = null
     let previousNewFiber:any = null
     let lastPlacedIndex = 0
+    let nextOldFiber = null;
+
+    for(; oldFiber != null && newIdx  < newChildren.length ;newIdx++){
+      if(oldFiber.index > newIdx){
+        nextOldFiber = oldFiber
+        oldFiber = null
+      }else{
+        nextOldFiber = oldFiber.sibling
+      }
+      const newFiber = updateSlot(returnFiber,oldFiber,newChildren[newIdx],lanes)
+      if (newFiber === null) {
+        debugger
+      }
+      if(shouldTrackSideEffects){
+        if(oldFiber && newFiber.alternate == null){
+          debugger
+        }
+      }
+      lastPlacedIndex = placeChild(newFiber,lastPlacedIndex,newIdx)
+
+      if(previousNewFiber == null){
+        resultingFirstChild = newFiber
+      }else{
+        previousNewFiber.sibling = newFiber
+      }
+
+      previousNewFiber = newFiber
+      oldFiber = nextOldFiber
+
+    }
+
+    if(newIdx == newChildren.length){
+      deleteRemainingChildren(returnFiber,oldFiber)
+      return resultingFirstChild
+    }
+
     if(oldFiber == null){
       for(; newIdx < newChildren.length ; newIdx++){
         const newFiber = createChild(returnFiber,newChildren[newIdx],lanes)
@@ -111,6 +165,26 @@ function ChildReconciler(shouldTrackSideEffects){
 
       }
       return resultingFirstChild
+    }
+  }
+
+  function updateTextNode(returnFiber,current,textContent,lanes){
+    if(current == null  || current.tag != HostText){
+      debugger
+    }else{
+      const existing = uFiber(current,textContent)
+      existing.return = returnFiber;
+      return existing
+    }
+  }
+
+  function updateSlot(returnFiber,oldFiber,newChild,lanes){
+    const key = oldFiber !== null ? oldFiber.key : null;
+    if(typeof newChild == 'string' || typeof newChild == 'number'){
+      if(key != null){
+        return null
+      }
+      return updateTextNode(returnFiber,oldFiber,''+newChild,lanes)
     }
   }
 
@@ -140,6 +214,9 @@ function ChildReconciler(shouldTrackSideEffects){
 }
 
 export function cloneChildFibers(current,workInProgress){
+  if (workInProgress.child == null) {
+    return;
+  }
   let currentChild = workInProgress.child;
 
   let newChild = createWorkInProgress(currentChild,currentChild.pendingProps)

@@ -1,4 +1,4 @@
-import { appendChildToContainer, commitUpdate } from "../react-dom/client/ReactDOMHostConfig"
+import { appendChildToContainer, commitTextUpdate, commitUpdate } from "../react-dom/client/ReactDOMHostConfig"
 import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { HostComponent, HostRoot, HostText } from "./ReactWorkTags"
@@ -107,6 +107,13 @@ export function commitBeforeMutationEffects(root,firstChild){
 
 export function commitWork(current,finishedWork){
   switch(finishedWork.tag){
+    case HostText:
+      const textInstance = finishedWork.stateNode;
+    const newText = finishedWork.memoizedProps;
+      const oldText = current != null ? current.memoizedProps : newText
+      commitTextUpdate(textInstance,oldText,newText)
+      
+      return
     case HostComponent:
       const instance = finishedWork.stateNode;
       if(instance != null){

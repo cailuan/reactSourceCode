@@ -256,6 +256,7 @@ export function renderWithHooks(current,workInProgress,Component,props,secondArg
   currentlyRenderingFiber = workInProgress
   workInProgress.memoizedState = null;
   workInProgress.lanes = NoLanes
+  hookTypesUpdateIndexDev = -1
   if (current !== null && current.memoizedState !== null) {
     ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
   }else{

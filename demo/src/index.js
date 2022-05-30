@@ -37,9 +37,11 @@ const Host2 = ()=>{
 const RefHook = ()=>{
   debugger
   const [initState,setInitState] = useState(1)
+  const [hook1,setHook1] = useState('hook')
   const hookRef = useRef(null)
   const ref2 = useRef(null)
-  return <div ref={hookRef} onClick={()=> { debugger; ref2.current = (init)=>{ return init + 1} ;setInitState(ref2.current) }}>{initState}</div>
+  const t = initState + "-1" + hook1
+  return <div  ref={hookRef} onClick={()=> { debugger;setHook1(hook1+"1") ; ref2.current = (init)=>{ return init + 1} ;setInitState(ref2.current) }}>{initState} </div>
 }
 
 createRoot(rootEl).render(<RefHook/ >);

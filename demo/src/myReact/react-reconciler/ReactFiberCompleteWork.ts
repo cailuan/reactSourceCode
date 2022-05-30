@@ -26,6 +26,11 @@ let updateHostComponent = function(current,workInProgress,type,newProps,rootCont
     markUpdate(workInProgress)
   }
 }
+let updateHostText = function(current,workInProgress,oldText,newText){
+  if(oldText !== newText){
+    markUpdate(workInProgress)
+  }
+}
 
 const appendAllChildren = function(parent,workInProgress,needsVisibilityToggle,isHidden){
   let node = workInProgress.child;
@@ -60,11 +65,19 @@ export function completeWork(current,workInProgress,renderLanes){
       return null
     case HostText:
       const newText = newProps;
-      workInProgress.stateNode = createTextInstance(newText,_rootContainerInstance,{},workInProgress)
+      if (current && workInProgress.stateNode != null) {
+        const oldText = current.memoizedProps;
+        updateHostText(current,workInProgress,oldText,newText)
+      }else{
+        workInProgress.stateNode = createTextInstance(newText,_rootContainerInstance,{},workInProgress)
+      }
+      
       bubbleProperties(workInProgress)
       return null
     case HostRoot:
+
       const fiberRoot = workInProgress.stateNode
+    
       bubbleProperties(workInProgress)
       break
     case HostComponent:

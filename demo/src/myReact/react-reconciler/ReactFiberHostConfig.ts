@@ -10,5 +10,4 @@ function handleErrorInNextTick(error){
 
 
 
-
 export const scheduleMicrotask = typeof queueMicrotask == 'function' ? queueMicrotask : typeof Promise != 'undefined' ? (callback)=> Promise.resolve(null).then(callback).catch(handleErrorInNextTick) : setTimeout

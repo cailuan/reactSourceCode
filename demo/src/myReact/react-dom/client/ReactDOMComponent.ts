@@ -80,7 +80,7 @@ export function diffProperties(domElement,tag,lastRawProps,nextRawProps,rootCont
       }
     } else
     if(registrationNameDependencies.hasOwnProperty(propKey)){
-      if(lastProp != nextProp){
+      if( !updatePayload && lastProp != nextProp){
         updatePayload = []
       }
     }

@@ -44,3 +44,7 @@ export function commitUpdate(domElement,updatePayload,type,oldProps,newProps,int
   updateProperties(domElement, updatePayload, type, oldProps, newProps)
   
 }
+ 
+export function commitTextUpdate(textInstance,oldText,newText){
+  textInstance.nodeValue = newText;
+}
