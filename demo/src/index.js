@@ -41,7 +41,12 @@ const RefHook = ()=>{
   const hookRef = useRef(null)
   const ref2 = useRef(null)
   const t = initState + "-1" + hook1
-  return <div  ref={hookRef} onClick={()=> { debugger;setHook1(hook1+"1") ; ref2.current = (init)=>{ return init + 1} ;setInitState(ref2.current) }}>{initState} </div>
+  return <div  ref={hookRef} onClick={()=> { debugger;setHook1(hook1+"1") ; ref2.current = (init)=>{ return init + 1} ;setInitState(ref2.current) }}>
+    <div>
+    {initState}
+    </div>
+    <div>{hook1}</div>
+    </div>
 }
 
 createRoot(rootEl).render(<RefHook/ >);

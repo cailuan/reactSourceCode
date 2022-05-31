@@ -191,7 +191,7 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
 function commitAttachRef(finishedWork){
   debugger
   const ref = finishedWork.ref;
-  if (ref !== null) {
+  if (ref != null) {
     const instance = finishedWork.stateNode;
     if(typeof ref == 'function'){
 
