@@ -45,6 +45,7 @@ const RefHook = ()=>{
     <div>
     {initState}
     </div>
+    <Host2></Host2>
     <div>{hook1}</div>
     </div>
 }

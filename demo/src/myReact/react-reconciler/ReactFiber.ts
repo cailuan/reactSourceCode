@@ -47,6 +47,9 @@ export function createWorkInProgress(current,pendingProps){
   workInProgress.child = current.child;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
+  workInProgress.ref = current.ref
+  workInProgress.index = current.index
+  workInProgress.sibling = current.sibling
 
   return workInProgress
   

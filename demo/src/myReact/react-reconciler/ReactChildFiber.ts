@@ -7,6 +7,9 @@ import { HostText } from "./ReactWorkTags";
 
 function coerceRef(returnFiber,current,element){
   const mixedRef = element.ref;
+  if(mixedRef != null && typeof mixedRef != 'function' && typeof mixedRef != 'object'){
+    
+  }
   return mixedRef
 }
 
@@ -178,6 +181,18 @@ debugger
     }
   }
 
+  function updateElement(returnFiber,current,element,lanes){
+    const elementType = element.type;
+    if(current != null){
+      if(current.elementType === elementType){
+        const existing = uFiber(current,element.props)
+        existing.ref = coerceRef(returnFiber,current,element)
+        existing.return = returnFiber;
+        return existing
+      }
+    }
+  }
+
   function updateSlot(returnFiber,oldFiber,newChild,lanes){
     const key = oldFiber !== null ? oldFiber.key : null;
     if(typeof newChild == 'string' || typeof newChild == 'number'){
@@ -185,6 +200,16 @@ debugger
         return null
       }
       return updateTextNode(returnFiber,oldFiber,''+newChild,lanes)
+    }
+    if(typeof newChild == 'object' && newChild != null){
+      switch(newChild.$$typeof){
+        case REACT_ELEMENT_TYPE:
+          if(newChild.key == key){
+            return updateElement(returnFiber,oldFiber,newChild,lanes)
+          }else{
+            return null
+          }
+      }
     }
   }
 
