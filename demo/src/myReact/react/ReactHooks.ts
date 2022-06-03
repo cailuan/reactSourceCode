@@ -14,3 +14,8 @@ export function useRef(initialState){
   const dispatcher = resolveDispatcher()
   return dispatcher.useRef(initialState)
 }
+
+export function useEffect(create,deps){
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useEffect(create, deps);
+}

@@ -1,10 +1,11 @@
 import { scheduleCallback } from "../scheduler/scheduler";
-import { NormalPriority } from "../scheduler/SchedulerPriorities";
-import { DiscreteEventPriority, getCurrentUpdatePriority, lanesToEventPriority, setCurrentUpdatePriority } from "./ReactEventPriorities";
+import { NormalPriority as NormalSchedulerPriority } from "../scheduler/SchedulerPriorities";
+import { DiscreteEventPriority, getCurrentUpdatePriority, lanesToEventPriority, setCurrentUpdatePriority ,lowerEventPriority,DefaultEventPriority} from "./ReactEventPriorities";
 import { createWorkInProgress } from "./ReactFiber";
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork'
-import { commitMutationEffects, commitBeforeMutationEffects, commitLayoutEffects } from "./ReactFiberCommitWork";
+import { commitMutationEffects, commitBeforeMutationEffects, commitLayoutEffects, commitPassiveUnmountEffects ,commitPassiveMountEffects} from "./ReactFiberCommitWork";
 import { completeWork } from "./ReactFiberCompleteWork";
+import { NoFlags, PassiveMask } from "./ReactFiberFlags";
 import { scheduleMicrotask } from "./ReactFiberHostConfig";
 import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane } from "./ReactFiberLane"
 import { scheduleSyncCallback,flushSyncCallbacks } from "./ReactFiberSyncTaskQueue";
@@ -22,9 +23,12 @@ let workInProgressRoot:any = null
 let workInProgress:any = null
 let workInProgressRootRenderLanes = NoLanes
 let workInProgressRootExitStatus = RootIncomplete
+let rootWithPendingPassiveEffects:any = null
 
+let rootDoesHavePassiveEffects = false
 
 export let subtreeRenderLanes = NoLanes
+let pendingPassiveEffectsLanes = NoLanes
 
 export function requestEventTime(){
   return performance.now()
@@ -44,6 +48,30 @@ export function requestUpdateLane(fiber){
   return DefaultLane
 }
   
+
+export function flushPassiveEffects(){
+  if(rootWithPendingPassiveEffects !=null){
+    const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes)
+    const priority = lowerEventPriority(DefaultEventPriority,renderPriority)
+    const previousPriority = getCurrentUpdatePriority()
+    try{
+      setCurrentUpdatePriority(priority)
+      return flushPassiveEffectsImpl()
+    }finally{
+      setCurrentUpdatePriority(previousPriority)
+    }
+  }
+}
+
+function flushPassiveEffectsImpl(){
+  if(rootWithPendingPassiveEffects == null) return false
+  const root = rootWithPendingPassiveEffects;
+  const lanes = pendingPassiveEffectsLanes;
+  rootWithPendingPassiveEffects = null;
+  pendingPassiveEffectsLanes = NoLanes
+  commitPassiveUnmountEffects(root.current)
+  commitPassiveMountEffects(root,root.current)
+}
 
 
 export function scheduleUpdateOnFiber(fiber,lane,eventTime){
@@ -100,7 +128,7 @@ function ensureRootIsScheduled(root,currentTime){
   }else{
     switch(lanesToEventPriority(nextLanes)){
       case DefaultLane:
-        schedulerPriorityLevel = NormalPriority
+        schedulerPriorityLevel = NormalSchedulerPriority
         break
     }
      newCallbackNode =  scheduleCallback(schedulerPriorityLevel,performConcurrentWorkOnRoot.bind(null,root))
@@ -225,13 +253,34 @@ function commitRootImpl(root, renderPriorityLevel){
   root.finishedWork = null
   root.finishedLanes = NoLanes
   root.callbackPriority = NoLane
+  debugger
+  //todo 任务队列 useEffect 挂载和删除
+  if((finishedWork.subtreeFlags & PassiveMask) != NoFlags || (finishedWork.flags & PassiveMask ) != NoFlags ){
+    if(!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true
+      
+      scheduleCallback(NormalSchedulerPriority,()=>{
+        flushPassiveEffects()
+        return null
+      })
+    }
+  }
+
   markRootFinished(root,0)
   commitBeforeMutationEffects(root, finishedWork)
   commitMutationEffects(root, finishedWork, lanes);
   root.current = finishedWork
 
   commitLayoutEffects(finishedWork, root, lanes);
+
+  const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
+  if(rootDidHavePassiveEffects){
+    rootDoesHavePassiveEffects = false;
+    rootWithPendingPassiveEffects = root;
+    pendingPassiveEffectsLanes = lanes;
+  }
   
+  flushSyncCallbacks()
   // onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
 
 }

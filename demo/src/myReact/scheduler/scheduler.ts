@@ -12,6 +12,9 @@ var taskIdCounter = 1;
 var taskQueue = [];
 var timerQueue = [];
 
+var isHostCallbackScheduled = false;
+var isPerformingWork = false;
+
 let scheduledHostCallback:any = null
 let schedulePerformWorkUntilDeadline
 
@@ -108,8 +111,12 @@ export function scheduleCallback(priorityLevel, callback){
 
   newTask.sortIndex = expirationTime
   push(taskQueue,newTask)
-
-  requestHostCallback(flushWork)
+  
+  if(!isHostCallbackScheduled && !isPerformingWork){
+    isHostCallbackScheduled = true;
+    requestHostCallback(flushWork)
+  }
+  
 
   return newTask
 } 
@@ -134,6 +141,7 @@ function workLoop(hasTimeRemaining, initialTime){
   advanceTimers(currentTime)
   currentTask = peek(taskQueue)
   while(currentTask != null){
+    debugger
     if(currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())){
       break;
     }

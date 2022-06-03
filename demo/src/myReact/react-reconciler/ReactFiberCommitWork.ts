@@ -1,7 +1,9 @@
 import { appendChildToContainer, commitTextUpdate, commitUpdate } from "../react-dom/client/ReactDOMHostConfig"
-import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref } from "./ReactFiberFlags"
+import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
-import { HostComponent, HostRoot, HostText } from "./ReactWorkTags"
+import { Passive as HookPassive , HasEffect as HookHasEffect } from "./ReactHookEffectTags"
+import { ProfileMode } from "./ReactTypeOfMode"
+import { FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags"
 
 let nextEffect:any = null
 let inProgressLanes = null
@@ -198,5 +200,145 @@ function commitAttachRef(finishedWork){
     }else{
       ref.current = instance
     }
+  }
+}
+
+export function commitPassiveUnmountEffects(firstChild){
+  nextEffect = firstChild;
+  commitPassiveUnmountEffects_begin()
+}
+
+function commitPassiveUnmountEffects_begin(){
+  while(nextEffect != null){
+    const fiber = nextEffect;
+    const child = fiber.child
+    if((child.subtreeFlags & PassiveMask) != NoLanes && child != null){
+      nextEffect = child
+    }else{
+      commitPassiveUnmountEffects_complete()
+    }
+  }
+}
+
+function commitPassiveUnmountEffects_complete(){
+  while(nextEffect != null){
+    const fiber = nextEffect
+    if((fiber.flags & Passive) != NoFlags){
+      commitPassiveUnmountOnFiber(fiber)
+    }
+    const sibling = fiber.sibling;
+    if(sibling != null){
+      nextEffect = sibling;
+      return;
+    }
+    nextEffect = fiber.return;
+  }
+}
+
+function commitPassiveUnmountOnFiber(finishedWork){
+  switch(finishedWork.tag){
+    case FunctionComponent:
+      commitHookEffectListUnmount(HookPassive |HookHasEffect , finishedWork, finishedWork.return )
+      break;
+  }
+}
+
+function commitHookEffectListUnmount(flags,finishedWork,nearestMountedAncestor){
+  const updateQueue = finishedWork.updateQueue
+  const lastEffect = updateQueue != null ? updateQueue.lastEffect : null
+  if(lastEffect != null){
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do{
+      if((effect.tag & flags) === flags){
+        const destroy = effect.destroy;
+        effect.destroy = undefined;
+        if(destroy != undefined){
+          debugger
+          // safelyCallDestroy(finishedWork,nearestMountedAncestor,destroy)
+        }
+      }
+      effect = effect.next;
+    }while(effect != firstEffect)
+  }
+}
+
+
+export function commitPassiveMountEffects(root,finishedWork){
+  nextEffect = finishedWork;
+  commitPassiveMountEffects_begin(finishedWork, root)
+}
+
+
+function commitPassiveMountEffects_begin(subtreeRoot,root){
+  while(nextEffect != null){
+    const fiber = nextEffect;
+    const firstChild = fiber.child;
+    if((fiber.subtreeFlags & PassiveMask) != NoFlags && firstChild != null){
+      nextEffect = firstChild;
+    }else{
+      commitPassiveMountEffects_complete(subtreeRoot,root)
+    }
+  }
+}
+
+function commitPassiveMountEffects_complete(subtreeRoot,root){
+  while(nextEffect != null){
+    const fiber = nextEffect
+
+    if((fiber.flags & Passive) != NoFlags){
+      try{
+        commitPassiveMountOnFiber(root,fiber)
+      }catch(error){
+        debugger
+        // captureCommitPhaseError(fiber, fiber.return, error)
+      }
+      
+    }
+    if(fiber == subtreeRoot){
+      nextEffect = null
+      return
+    }
+    const sibling = fiber.sibling
+    if (sibling !== null) {
+      nextEffect = sibling;
+      return;
+    }
+    nextEffect = fiber.return;
+  }
+}
+
+function commitPassiveMountOnFiber(finishedRoot,finishedWork){
+  switch(finishedWork.tag){
+    case FunctionComponent:
+      if(finishedWork.mode & ProfileMode){
+        try{
+          commitHookEffectListMount(HookPassive | HookHasEffect , finishedWork)
+        }finally{
+          debugger
+
+        }
+      }
+      break
+  }
+}
+
+function commitHookEffectListMount(tag,finishedWork){
+  const updateQueue = finishedWork.updateQueue
+  const lastEffect = updateQueue != null ? updateQueue.lastEffect : null
+  if(lastEffect != null){
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do{
+      if((effect.tag & tag) == tag){
+        const create = effect.create
+        effect.destroy = create();
+        const destroy = effect.destroy;
+        if(destroy != undefined && typeof destroy != 'function'){
+          console.error(' destroy is error')
+        }
+      }
+      effect = effect.next
+    }while(effect !== firstEffect)
   }
 }

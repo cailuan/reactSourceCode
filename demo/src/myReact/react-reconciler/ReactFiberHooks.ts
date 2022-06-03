@@ -1,7 +1,10 @@
+import objectIs from "../shared/objectIs";
 import ReactSharedInternals from "../shared/ReactSharedInternals"
+import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect} from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
+import { Passive as HookPassive ,HasEffect as HookHasEffect } from "./ReactHookEffectTags";
 const {ReactCurrentDispatcher} = ReactSharedInternals
 
 let currentHookNameInDev:string|null = null
@@ -43,6 +46,11 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useRef'
     mountHookTypesDev()
     return mountRef(initialValue)
+  },
+  useEffect:(create,deps)=>{
+    currentHookNameInDev = 'useEffect'
+    mountHookTypesDev()
+    return mountEffect(create,deps)
   }
 }
 
@@ -62,6 +70,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useRef';
     updateHookTypesDev()
     return updateRef(initialValue);
+  },
+  useEffect:(create,deps)=>{
+    currentHookNameInDev = 'useEffect';
+    updateHookTypesDev()
+    return updateEffect(create, deps)
   }
 }
 
@@ -93,6 +106,14 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
       ReactCurrentDispatcher.current = prevDispatcher;
     }
   }
+}
+
+function mountEffect(create, deps){
+  return mountEffectImpl(PassiveEffect | PassiveStaticEffect,HookPassive,create,deps)
+}
+
+function updateEffect(create ,deps){
+  return updateEffectImpl(PassiveEffect,HookPassive,create,deps)
 }
 
 function mountRef(initialValue){
@@ -223,6 +244,80 @@ function updateState(initialState){
   return updateReducer(basicStateReducer,initialState)
 }
 
+
+function mountEffectImpl(fiberFlags,hookFlags,create,deps){
+  const hook = mountWorkInProgressHook()
+  const nextDeps = deps === undefined ? null : deps
+  currentlyRenderingFiber.flags |= fiberFlags
+  hook.memoizedState = pushEffect(HookHasEffect | hookFlags , create,undefined,nextDeps)
+}
+
+function pushEffect(tag,create,destroy,deps){
+  const effect:any = {
+    tag,
+    create,
+    destroy,
+    deps,
+    next:null
+  }
+  let componentUpdateQueue = currentlyRenderingFiber.updateQueue
+  if(componentUpdateQueue == null){
+    componentUpdateQueue = createFunctionComponentUpdateQueue()
+    currentlyRenderingFiber.updateQueue = componentUpdateQueue
+    componentUpdateQueue.lastEffect = effect.next = effect;
+  }else{
+    const lastEffect = componentUpdateQueue.lastEffect;
+    if(lastEffect == null){
+      componentUpdateQueue.lastEffect = effect.next = effect;
+    }else{
+      const firstEffect = lastEffect.next;
+      lastEffect.next = effect;
+      effect.next = firstEffect;
+      componentUpdateQueue.lastEffect = effect;
+    }
+    
+
+  }
+  return effect
+}
+
+function updateEffectImpl(fiberFlags,hookFlags,create,deps){
+  const hook = updateWorkInProgressHook()
+  const nextDeps = deps == undefined ? null : deps
+  let destroy = undefined;
+  if(currentHook != null){
+    const prevEffect = currentHook.memoizedState
+    destroy = prevEffect.destroy;
+    if (nextDeps !== null) {
+      const prevDeps = prevEffect.deps;
+      if(areHookInputsEqual(nextDeps,prevDeps)){
+
+      }
+    }
+  } 
+}
+
+function areHookInputsEqual(nextDeps,prevDeps){
+  if(prevDeps == null){
+    return false
+  }
+  if(nextDeps.length != prevDeps.length){
+    console.error('length no equet ')
+  }
+  for(let i = 0 ; i< nextDeps.length && i < prevDeps.length ; i++){
+    if(objectIs(nextDeps[i],prevDeps[i])){
+      continue
+    }
+    return false
+  }
+  return true
+}
+
+function createFunctionComponentUpdateQueue(){
+  return {
+    lastEffect: null,
+  }
+}
 function throwInvalidHookError() {
   console.error(
     'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +

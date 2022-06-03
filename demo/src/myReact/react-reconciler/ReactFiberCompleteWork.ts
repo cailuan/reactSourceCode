@@ -1,5 +1,5 @@
 import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild, prepareUpdate} from "../react-dom/client/ReactDOMHostConfig";
-import { Ref, RefStatic, Update } from "./ReactFiberFlags";
+import { Ref, RefStatic, Snapshot, Update } from "./ReactFiberFlags";
 import { getRootHostContainer } from "./ReactFiberHostContext";
 import { NoLanes } from "./ReactFiberLane";
 import { ProfileMode } from "./ReactTypeOfMode";
@@ -75,6 +75,7 @@ export function completeWork(current,workInProgress,renderLanes){
       bubbleProperties(workInProgress)
       return null
     case HostRoot:
+      workInProgress.flags |=  Snapshot
 
       const fiberRoot = workInProgress.stateNode
     
