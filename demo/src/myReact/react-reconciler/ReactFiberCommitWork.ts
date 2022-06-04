@@ -326,6 +326,7 @@ function commitPassiveMountOnFiber(finishedRoot,finishedWork){
 function commitHookEffectListMount(tag,finishedWork){
   const updateQueue = finishedWork.updateQueue
   const lastEffect = updateQueue != null ? updateQueue.lastEffect : null
+
   if(lastEffect != null){
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
@@ -339,6 +340,6 @@ function commitHookEffectListMount(tag,finishedWork){
         }
       }
       effect = effect.next
-    }while(effect !== firstEffect)
+    }while(effect != firstEffect)
   }
 }

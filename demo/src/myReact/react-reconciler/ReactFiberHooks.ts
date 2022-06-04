@@ -291,10 +291,13 @@ function updateEffectImpl(fiberFlags,hookFlags,create,deps){
     if (nextDeps !== null) {
       const prevDeps = prevEffect.deps;
       if(areHookInputsEqual(nextDeps,prevDeps)){
-
+        hook.memoizedState = pushEffect(hookFlags,create,destroy,nextDeps)
+        return
       }
     }
   } 
+  currentlyRenderingFiber.flags |= fiberFlags;
+  hook.memoizedState = pushEffect(HookHasEffect | hookFlags , create, destroy ,nextDeps)
 }
 
 function areHookInputsEqual(nextDeps,prevDeps){
@@ -350,6 +353,7 @@ export const ContextOnlyDispatcher:any = {
 export function renderWithHooks(current,workInProgress,Component,props,secondArg,nextRenderLanes){
   currentlyRenderingFiber = workInProgress
   workInProgress.memoizedState = null;
+  workInProgress.updateQueue = null
   workInProgress.lanes = NoLanes
   hookTypesUpdateIndexDev = -1
   if (current !== null && current.memoizedState !== null) {

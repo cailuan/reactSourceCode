@@ -114,6 +114,7 @@ export function scheduleCallback(priorityLevel, callback){
   
   if(!isHostCallbackScheduled && !isPerformingWork){
     isHostCallbackScheduled = true;
+    console.log('unstable_scheduleCallback')
     requestHostCallback(flushWork)
   }
   
@@ -122,7 +123,15 @@ export function scheduleCallback(priorityLevel, callback){
 } 
 
 function flushWork(hasTimeRemaining, initialTime){
-  return workLoop(hasTimeRemaining, initialTime)
+   isHostCallbackScheduled = false
+   isPerformingWork = true;
+   console.log('flushWork')
+   try{
+    return workLoop(hasTimeRemaining, initialTime)
+   }finally {
+    isPerformingWork = false;
+   }
+  
 }
 
 function requestHostCallback(callback){

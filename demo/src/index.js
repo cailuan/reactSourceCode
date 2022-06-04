@@ -40,10 +40,7 @@ const RefHook = ()=>{
   const [hook1,setHook1] = useState('hook')
   useEffect(()=>{
     console.log('useEffect1')
-  },[])
-  useEffect(()=>{
-    console.log('useEffect2')
-  },[])
+  },[initState])
   const hookRef = useRef(null)
   const ref2 = useRef(null)
   

@@ -79,6 +79,8 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
   if(typeof type === 'function'){
     if(shouldConstruct(type)){
       // react class
+    }else{
+      
     }
   }else if(typeof type === 'string'){
     fiberTag = HostComponent
