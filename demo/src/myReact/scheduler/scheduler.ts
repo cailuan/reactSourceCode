@@ -44,7 +44,7 @@ function advanceTimers(currentTime){
 }
 
 const performWorkUntilDeadline = ()=>{
-  // todo 
+  // 初次执行 flushWork
   if(scheduledHostCallback != null){
     console.log('performWorkUntilDeadline performWorkUntilDeadline')
     const currentTime = getCurrentTime()

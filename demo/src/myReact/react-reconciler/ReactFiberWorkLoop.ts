@@ -131,10 +131,11 @@ function ensureRootIsScheduled(root,currentTime){
         schedulerPriorityLevel = NormalSchedulerPriority
         break
     }
+    // 添加 taskQueue任务队列 level 初始化为3
      newCallbackNode =  scheduleCallback(schedulerPriorityLevel,performConcurrentWorkOnRoot.bind(null,root))
   }
   
-  
+  // root 上添加 performConcurrentWorkOnRoot callback
   root.callbackPriority = newCallbackPriority
   root.callbackNode = newCallbackNode
 

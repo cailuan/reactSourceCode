@@ -17,6 +17,7 @@ export function listenToAllSupportedEvents(rootContainerElement){
   if(!rootContainerElement[listeningMarker]) {
     rootContainerElement[listeningMarker] = true
     allNativeEvents.forEach(event => {
+      // 事件系统添加冒泡和捕获 dispatchDiscreteEvent
       listenToNativeEvent(event,false,rootContainerElement)
       listenToNativeEvent(event,true,rootContainerElement)
     });
@@ -41,7 +42,7 @@ function listenToNativeEvent(domEventName,isCapturePhaseListener,target){
 }
 
 function addTrappedEventListener(targetContainer,domEventName,eventSystemFlags,isCapturePhaseListener){
-  //todo 添加事件
+  // 添加事件 dispatchDiscreteEvent linster 事件
   const listener = createEventListenerWrapperWithPriority(targetContainer,domEventName,eventSystemFlags)
   let unsubscribeListener
   if(isCapturePhaseListener){

@@ -21,6 +21,7 @@ export function updateContainer(element,container){
   const current = container.current;
   const eventTime = requestEventTime();
   var lane = requestUpdateLane(current)
+  // 当前节点更新到 current.updateQueue.shared.pending.payload.element 上
   var update:any =  createUpdate(eventTime,lane)
   update.payload = {
     element

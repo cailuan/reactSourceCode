@@ -1,10 +1,11 @@
 import objectIs from "../shared/objectIs";
 import ReactSharedInternals from "../shared/ReactSharedInternals"
-import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect} from "./ReactFiberFlags";
+import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect} from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
-import { Passive as HookPassive ,HasEffect as HookHasEffect } from "./ReactHookEffectTags";
+import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags";
+import { NoMode, StrictEffectsMode } from "./ReactTypeOfMode";
 const {ReactCurrentDispatcher} = ReactSharedInternals
 
 let currentHookNameInDev:string|null = null
@@ -51,7 +52,39 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useEffect'
     mountHookTypesDev()
     return mountEffect(create,deps)
-  }
+  },
+  useMemo:(create,deps)=>{
+    currentHookNameInDev = 'useMemo'
+    mountHookTypesDev()
+    const prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV as any
+    try{
+      return mountMemo(create,deps)
+    }finally{
+      ReactCurrentDispatcher.current = prevDispatcher
+    }
+  },
+  useCallback:(create,deps)=>{
+    currentHookNameInDev = 'useCallback'
+    mountHookTypesDev()
+    return mountCallback(create,deps)
+  },
+  useReducer:(reducer, initialArg, init)=>{
+    currentHookNameInDev =  'useReducer'
+    mountHookTypesDev()
+    const prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV as any
+    try{
+      return mountReducer(reducer, initialArg, init)
+    }finally{
+      ReactCurrentDispatcher.current = prevDispatcher
+    }
+  },
+  // useLayoutEffect:(create,deps)=>{
+  //   currentHookNameInDev = 'useLayoutEffect';
+  //   mountHookTypesDev()
+  //   return mountLayoutEffect(create,deps)
+  // }
 }
 
 HooksDispatcherOnUpdateInDEV ={
@@ -75,6 +108,33 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useEffect';
     updateHookTypesDev()
     return updateEffect(create, deps)
+  },
+  useMemo:(create,deps)=>{
+    currentHookNameInDev = 'useMemo';
+    updateHookTypesDev()
+    const prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+    try{
+      return updateMemo(create, deps)
+    }finally{
+      ReactCurrentDispatcher.current = prevDispatcher;
+    }
+  },
+  useCallback:(create,deps)=>{
+    currentHookNameInDev = 'useCallback'
+    updateHookTypesDev()
+    return updateCallback(create,deps)
+  },
+  useReducer:(reducer, initialArg, init)=>{
+    currentHookNameInDev = 'useReducer'
+    updateHookTypesDev()
+    const prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+    try{
+      return updateReducer(reducer, initialArg, init);
+    }finally{
+      ReactCurrentDispatcher.current = prevDispatcher;
+    }
   }
 }
 
@@ -106,6 +166,84 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
       ReactCurrentDispatcher.current = prevDispatcher;
     }
   }
+}
+
+// function mountLayoutEffect(create,deps){
+//   let fiberFlags = UpdateEffect
+//   fiberFlags |= LayoutStaticEffect
+//   if((currentlyRenderingFiber.mode & StrictEffectsMode) != NoMode){
+//     fiberFlags |= MountLayoutDevEffect
+//   }
+//   return mountEffectImpl(fiberFlags,HookLayout, create, deps)
+// }
+
+function mountReducer(reducer,initialArg,init){
+  const hook = mountWorkInProgressHook()
+  let initialState;
+  if(init != undefined){
+    initialState = init(initialArg)
+  }else{
+    initialState = initialArg
+  }
+  hook.memoizedState = hook.baseState = initialState
+  const queue = (hook.queue = {
+    pending : null,
+    interleaved : null,
+    lanes : NoLanes,
+    dispatch : null,
+    lastRenderedReducer : reducer,
+    lastRenderedState : initialState
+  })
+  const dispatch = (queue.dispatch = dispatchAction.bind(null,currentlyRenderingFiber,queue) as any)
+  return [hook.memoizedState,dispatch]
+}
+
+function mountCallback(callback,deps){
+  const hook =  mountWorkInProgressHook()
+  const nextDeps = deps === undefined ? null : deps
+  hook.memoizedState = [callback, nextDeps];
+  return callback;
+}
+
+function updateCallback(callback,deps){
+  const hook = updateWorkInProgressHook()
+  const nextDeps = deps === undefined ? null : deps
+  const prevState = hook.memoizedState
+  if(prevState != null){
+    if(nextDeps != null){
+      const prevDeps = prevState[1]
+      if(areHookInputsEqual(nextDeps,prevDeps)){
+        return prevState[0]
+      }
+    }
+  }
+  hook.memoizedState = [callback, nextDeps];
+  return callback;
+}
+
+function mountMemo(nextCreate, deps){
+  const hook = mountWorkInProgressHook()
+  const nextDeps = deps === undefined ? null : deps;
+  const nextValue = nextCreate()
+  hook.memoizedState = [nextValue,nextDeps]
+  return nextValue;
+}
+
+function updateMemo(nextCreate,deps){
+  const hook = updateWorkInProgressHook()
+  const nextDeps = deps == undefined ? null : deps
+  const prevState = hook.memoizedState;
+  if(prevState != null){
+    if(nextDeps != null){
+      const prevDeps = prevState[1]
+      if(areHookInputsEqual(nextDeps , prevDeps)){
+        return prevState[0]
+      }
+    }
+  }
+  const nextValue = nextCreate()
+  hook.memoizedState = [nextValue,nextDeps]
+  return nextValue
 }
 
 function mountEffect(create, deps){

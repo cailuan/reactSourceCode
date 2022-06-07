@@ -14,6 +14,7 @@ export function createRoot(container,option){
   
 }
 
+//添加 _internalRoot 属性 
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
 }
@@ -22,6 +23,7 @@ ReactDOMRoot.prototype.render = function(children: any){
   let root = this._internalRoot 
   var container = root.containerInfo;
   if(container.nodeType !=  COMMENT_NODE){
+    // 忽略 无用
     const hostInstance = findHostInstanceWithNoPortals(root.current)
   }
   updateContainer(children,root)
