@@ -1,7 +1,7 @@
 import { appendChildToContainer, commitTextUpdate, commitUpdate } from "../react-dom/client/ReactDOMHostConfig"
-import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive } from "./ReactFiberFlags"
+import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, PlacementAndUpdate } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
-import { Passive as HookPassive , HasEffect as HookHasEffect } from "./ReactHookEffectTags"
+import { Passive as HookPassive , HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags"
 import { ProfileMode } from "./ReactTypeOfMode"
 import { FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags"
 
@@ -52,10 +52,18 @@ function commitMutationEffectsOnFiber(finishedWork,root){
       commitPlacement(finishedWork)
       finishedWork.flags &= ~Placement;
       break;
-    case Update:
+    case Update:{
       const current = finishedWork.alternate;
       commitWork(current,finishedWork)
       break
+    }
+    case PlacementAndUpdate:{
+      commitPlacement(finishedWork)
+      finishedWork.flags &= ~Placement
+      const current = finishedWork.alternate;
+      commitWork(current,finishedWork)
+      break
+    }
   }
 }
 
@@ -138,6 +146,9 @@ export function commitWork(current,finishedWork){
         }
       }
       return
+    case FunctionComponent:
+      commitHookEffectListUnmount(HookLayout | HookHasEffect,finishedWork,finishedWork.return)
+      return
   }
 }
 
@@ -182,6 +193,10 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
           debugger
           // commitMount(instance, type, props, finishedWork);
         }
+        break;
+      case FunctionComponent:
+        commitHookEffectListMount(HookLayout | HookHasEffect,finishedWork )
+        break
     }
   }
 
@@ -254,8 +269,7 @@ function commitHookEffectListUnmount(flags,finishedWork,nearestMountedAncestor){
         const destroy = effect.destroy;
         effect.destroy = undefined;
         if(destroy != undefined){
-          debugger
-          // safelyCallDestroy(finishedWork,nearestMountedAncestor,destroy)
+          safelyCallDestroy(finishedWork,nearestMountedAncestor,destroy)
         }
       }
       effect = effect.next;
@@ -341,5 +355,13 @@ function commitHookEffectListMount(tag,finishedWork){
       }
       effect = effect.next
     }while(effect != firstEffect)
+  }
+}
+
+function safelyCallDestroy(current,nearestMountedAncestor,destroy){
+  try{
+    destroy()
+  }catch(e){
+    console.log(e,'error')
   }
 }

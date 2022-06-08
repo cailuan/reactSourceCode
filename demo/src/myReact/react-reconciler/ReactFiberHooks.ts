@@ -80,11 +80,11 @@ HooksDispatcherOnMountInDEV = {
       ReactCurrentDispatcher.current = prevDispatcher
     }
   },
-  // useLayoutEffect:(create,deps)=>{
-  //   currentHookNameInDev = 'useLayoutEffect';
-  //   mountHookTypesDev()
-  //   return mountLayoutEffect(create,deps)
-  // }
+  useLayoutEffect:(create,deps)=>{
+    currentHookNameInDev = 'useLayoutEffect';
+    mountHookTypesDev()
+    return mountLayoutEffect(create,deps)
+  }
 }
 
 HooksDispatcherOnUpdateInDEV ={
@@ -135,7 +135,13 @@ HooksDispatcherOnUpdateInDEV ={
     }finally{
       ReactCurrentDispatcher.current = prevDispatcher;
     }
+  },
+  useLayoutEffect:(create,deps)=>{
+    currentHookNameInDev = 'useLayoutEffect'
+    updateHookTypesDev()
+    return updateLayoutEffect(create, deps);
   }
+  
 }
 
 
@@ -168,14 +174,18 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
   }
 }
 
-// function mountLayoutEffect(create,deps){
-//   let fiberFlags = UpdateEffect
-//   fiberFlags |= LayoutStaticEffect
-//   if((currentlyRenderingFiber.mode & StrictEffectsMode) != NoMode){
-//     fiberFlags |= MountLayoutDevEffect
-//   }
-//   return mountEffectImpl(fiberFlags,HookLayout, create, deps)
-// }
+function mountLayoutEffect(create,deps){
+  let fiberFlags = UpdateEffect
+  fiberFlags |= LayoutStaticEffect
+  if((currentlyRenderingFiber.mode & StrictEffectsMode) != NoMode){
+    fiberFlags |= MountLayoutDevEffect
+  }
+  return mountEffectImpl(fiberFlags,HookLayout, create, deps)
+}
+
+function updateLayoutEffect(create,deps){
+  return updateEffectImpl(UpdateEffect,HookLayout,create,deps)
+}
 
 function mountReducer(reducer,initialArg,init){
   const hook = mountWorkInProgressHook()

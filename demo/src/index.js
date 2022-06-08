@@ -80,6 +80,9 @@ const CreateReducer = ()=>{
   const [state, dispatch] = useReducer(reducer, initialState);
   useLayoutEffect(()=>{
     console.log('useLayout')
+    return ()=>{
+      console.log('useLayoutEffect destory')
+    }
   })
   return <div onClick={() => {debugger; dispatch({type: 'decrement'})}}>
     {state.count}
