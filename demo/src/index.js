@@ -88,7 +88,27 @@ const CreateReducer = ()=>{
     {state.count}
   </div>
 }
-createRoot(rootEl).render(<CreateReducer/ >);
+
+const CreateReducers = ()=>{
+  debugger
+  const [initState,setInitState] = useState(1)
+  useEffect(()=>{
+    console.log('useEffect')
+    setInitState(0)
+    // return ()=>{
+    //   console.log('useEffect destory')
+    // }
+  })
+  console.log('CreateReducer')
+  return <div onClick={()=>{
+    debugger
+    setInitState(initState+1)
+    setInitState(initState+2)
+  }}>
+    {initState}
+  </div>
+}
+createRoot(rootEl).render(<CreateReducers/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 

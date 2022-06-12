@@ -83,13 +83,18 @@ export function scheduleUpdateOnFiber(fiber,lane,eventTime){
 
 function markUpdateLaneFromFiberToRoot(fiber,lane){
   fiber.lanes = mergeLanes(fiber.lanes , lane)
-  const alternate = fiber.alternate
+  let alternate = fiber.alternate
   if(alternate != null){
     alternate.lanes = mergeLanes(alternate.lanes,lane)
   }
   let node = fiber
   let parent = node.return
   while(parent != null){
+    parent.childLanes = mergeLanes(parent.childLanes , lane)
+    alternate = parent.alternate
+    if(alternate != null){
+      alternate.childLanes = mergeLanes(alternate.childLanes , lane)
+    }
     node = parent
     parent = node.return
   }

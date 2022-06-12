@@ -62,3 +62,7 @@ export function markRootFinished(root,remainingLanes){
 export function includesSomeLane(a,b){
   return (a & b) != NoLanes
 }
+
+export function removeLanes(set,subset){
+  return set & ~subset;
+}

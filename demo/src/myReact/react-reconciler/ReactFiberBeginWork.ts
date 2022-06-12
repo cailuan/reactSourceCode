@@ -5,10 +5,20 @@ import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
 import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
 import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
-import { renderWithHooks } from "./ReactFiberHooks";
+import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
 import { prepareToReadContext } from "./ReactFiberNewContext";
 
+let didReceiveUpdate = false
+
+export function markWorkInProgressReceivedUpdate() {
+  didReceiveUpdate = true;
+}
+
 function bailoutOnAlreadyFinishedWork(current,workInProgress,renderLanes){
+  if(!includesSomeLane(renderLanes,workInProgress.childLanes)){
+    return
+  }
+
   cloneChildFibers(current,workInProgress)
 
   return workInProgress.child;
@@ -27,20 +37,27 @@ function markRef(current,workInProgress){
 export function beginWork(current, workInProgress, renderLanes){
   let updateLanes = workInProgress.lanes;
  
-
+debugger
   if(current != null){
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
     if(oldProps != newProps ){
-
+      didReceiveUpdate = true
     }else if(!includesSomeLane(renderLanes, updateLanes)){
+      didReceiveUpdate = false
       switch(workInProgress.tag){
         case HostRoot:
           break
       }
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+    }else{
+      didReceiveUpdate = false
     }
+  }else{
+    didReceiveUpdate = false;
   }
+
+
   workInProgress.lanes = NoLanes
   switch(workInProgress.tag){
     case IndeterminateComponent:
@@ -140,6 +157,12 @@ function pushHostRootContext(workInProgress){
 function updateFunctionComponent(current,workInProgress,Component,nextProps,renderLanes){
   let nextChildren 
   nextChildren = renderWithHooks(current,workInProgress,Component,nextProps,{},renderLanes)
+
+  if(current != null && !didReceiveUpdate){
+    bailoutHooks(current,workInProgress,renderLanes)
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+  }
+
   workInProgress.flags |= PerformedWork
 
   reconcileChildren(current,workInProgress,nextChildren,renderLanes)

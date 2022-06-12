@@ -22,6 +22,7 @@ function FiberNode(tag,pendingProps,key,mode){
   this.pendingLanes = NoLanes
   this.flags = NoFlags
   this.subtreeFlags = NoFlags
+  this.childLanes = NoLanes
 }
 
 

@@ -1,7 +1,7 @@
 import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild, prepareUpdate} from "../react-dom/client/ReactDOMHostConfig";
 import { Ref, RefStatic, Snapshot, Update } from "./ReactFiberFlags";
 import { getRootHostContainer } from "./ReactFiberHostContext";
-import { NoLanes } from "./ReactFiberLane";
+import { mergeLanes, NoLanes } from "./ReactFiberLane";
 import { ProfileMode } from "./ReactTypeOfMode";
 import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 
@@ -108,13 +108,17 @@ export function completeWork(current,workInProgress,renderLanes){
 function bubbleProperties(completedWork){
   const didBailout = completedWork.alternate != null && completedWork.alternate.child  == completedWork.child
   let subtreeFlags:any = NoLanes
+  let newChildLanes = NoLanes
   if(!didBailout){
     if((completedWork.mode & ProfileMode) !== NoLanes ){
       let child = completedWork.child
       while(child != null){
+        newChildLanes = mergeLanes(newChildLanes , mergeLanes(child.lanes,child.childLanes))
         subtreeFlags |= child.subtreeFlags
         subtreeFlags |= child.flags
         child = child.sibling
+
+       
       }
     }
 
@@ -123,10 +127,16 @@ function bubbleProperties(completedWork){
     if((completedWork.mode & ProfileMode ) != NoLanes){
       let child = completedWork.child;
       while(child != null){
-        
+        newChildLanes = mergeLanes(newChildLanes , mergeLanes(child.lanes,child.childLanes))
+        subtreeFlags |= child.subtreeFlags
+        subtreeFlags |= child.flags
+        child = child.sibling
+
+      
       }
     }
     completedWork.subtreeFlags |= subtreeFlags
   }
+  completedWork.childLanes = newChildLanes
   return didBailout
 }

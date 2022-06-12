@@ -1,7 +1,8 @@
 import objectIs from "../shared/objectIs";
 import ReactSharedInternals from "../shared/ReactSharedInternals"
-import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect} from "./ReactFiberFlags";
-import { NoLanes } from "./ReactFiberLane";
+import { markWorkInProgressReceivedUpdate } from "./ReactFiberBeginWork";
+import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect, Update} from "./ReactFiberFlags";
+import { NoLanes ,removeLanes } from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags";
@@ -372,7 +373,7 @@ function updateReducer(reducer,initialArg,init?:any){
       newBaseState = newState
     }
     if(!Object.is(newState , hook.memoizedState)){
-      // markWorkInProgressReceivedUpdate()
+      markWorkInProgressReceivedUpdate()
     }
     hook.memoizedState = newState
     hook.baseState = newBaseState
@@ -512,6 +513,7 @@ export function renderWithHooks(current,workInProgress,Component,props,secondArg
   
   let children = Component(props, secondArg)
   ReactCurrentDispatcher.current = ContextOnlyDispatcher
+  currentlyRenderingFiber = null
   currentHook = null;
   workInProgressHook = null;
   return children
@@ -590,4 +592,15 @@ function dispatchAction(fiber,queue,action){
     }
   }
   scheduleUpdateOnFiber(fiber,lane,eventTime)
+}
+
+
+export function bailoutHooks(current,workInProgress,lanes){
+  if((workInProgress.mode & StrictEffectsMode) != NoMode){
+    debugger
+    console.error('bailoutHooks')
+  }else{
+    workInProgress.flags &= ~(UpdateEffect | PassiveEffect)
+  }
+  current.lanes = removeLanes(current.lanes, lanes)
 }
