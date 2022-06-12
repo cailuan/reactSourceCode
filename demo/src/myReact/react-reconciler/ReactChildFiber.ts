@@ -1,7 +1,7 @@
 import isArray from "../shared/isArray"
 import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "../shared/ReactSymbols"
 import { createFiberFromText,createFiberFromElement, createWorkInProgress } from "./ReactFiber"
-import { Placement } from "./ReactFiberFlags"
+import { ChildDeletion, Placement } from "./ReactFiberFlags"
 import { HostText } from "./ReactWorkTags";
 
 
@@ -129,7 +129,10 @@ debugger
       }
       const newFiber = updateSlot(returnFiber,oldFiber,newChildren[newIdx],lanes)
       if (newFiber === null) {
-        debugger
+        if(oldFiber == null){
+          oldFiber = nextOldFiber
+        }
+        break
       }
       if(shouldTrackSideEffects){
         if(oldFiber && newFiber.alternate == null){
@@ -169,6 +172,77 @@ debugger
       }
       return resultingFirstChild
     }
+
+    const existingChildren = mapRemainingChildren(returnFiber , oldFiber)
+
+    for(; newIdx < newChildren.length ; newIdx++){
+      const newFiber = updateFromMap(existingChildren , returnFiber, newIdx, newChildren[newIdx], lanes)
+      if(newFiber != null){
+        if(shouldTrackSideEffects){
+          if (newFiber.alternate !== null) {
+            existingChildren.delete(newFiber.key == null ? newIdx : newFiber.key)
+          }
+        }
+
+        lastPlacedIndex =  placeChild(newFiber, lastPlacedIndex , newIdx)
+        if(previousNewFiber == null){
+          resultingFirstChild = newFiber
+        }else{
+          previousNewFiber.sibling = newFiber
+        }
+        previousNewFiber = newFiber
+      }
+    }
+    if(shouldTrackSideEffects) {
+      existingChildren.forEach(function(child){
+        return deleteChild(returnFiber,child)
+      })
+    }
+
+    return resultingFirstChild
+  }
+
+  function deleteChild(returnFiber, childToDelete){
+    if(!shouldTrackSideEffects){
+      return
+    }
+    const deletions = returnFiber.deletions;
+    if(deletions == null){
+      returnFiber.deletions = [childToDelete]
+      returnFiber.flags |= ChildDeletion
+    }else{
+      deletions.push(childToDelete)
+    }
+  }
+
+  function updateFromMap(existingChildren , returnFiber, newIdx, newChild,lanes){
+    if(typeof newChild === 'number' || typeof newChild === 'string'){
+      debugger
+    }
+    if(typeof newChild === 'object' && newChild != null){
+      switch(newChild.$$typeof){
+        case REACT_ELEMENT_TYPE:
+          const matchedFiber = existingChildren.get(newChild.key == null ? newIdx : newChild.key ) || null
+          return updateElement(returnFiber, matchedFiber, newChild, lanes)
+      }
+    }
+    return null
+  }
+
+
+  function mapRemainingChildren(returnFiber,currentFirstChild){
+    const existingChildren = new Map();
+    let existingChild = currentFirstChild;
+
+    while(existingChild != null){
+      if(existingChild.key  != null){
+        existingChildren.set(existingChild.key , existingChild)
+      }else {
+        existingChildren.set(existingChild.index , existingChild)
+      }
+      existingChild = existingChild.sibling
+    }
+    return existingChildren
   }
 
   function updateTextNode(returnFiber,current,textContent,lanes){
@@ -211,6 +285,7 @@ debugger
           }
       }
     }
+    return null
   }
 
   function reconcileChildFibers(returnFiber,currentFirstChild,newChild,lanes){

@@ -48,3 +48,7 @@ export function commitUpdate(domElement,updatePayload,type,oldProps,newProps,int
 export function commitTextUpdate(textInstance,oldText,newText){
   textInstance.nodeValue = newText;
 }
+
+export function removeChild(parentInstance,child){
+  parentInstance.removeChild(child)
+}

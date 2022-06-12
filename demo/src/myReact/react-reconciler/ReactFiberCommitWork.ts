@@ -1,4 +1,4 @@
-import { appendChildToContainer, commitTextUpdate, commitUpdate } from "../react-dom/client/ReactDOMHostConfig"
+import { appendChildToContainer, commitTextUpdate, commitUpdate, removeChild } from "../react-dom/client/ReactDOMHostConfig"
 import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, PlacementAndUpdate } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { Passive as HookPassive , HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags"
@@ -21,6 +21,18 @@ function commitMutationEffects_begin(root){
   while(nextEffect != null){
     let fiber = nextEffect;
     const child = fiber.child;
+    const deletions = fiber.deletions;
+    if(deletions != null){
+      for (let i = 0; i < deletions.length; i++) {
+        const childToDelete = deletions[i];
+        try{
+          commitDeletion(root,childToDelete,fiber)
+        }catch(e){
+
+        }
+      }
+    }
+
     // todo subtreeFlags (fiber.subtreeFlags & MutationMask) !== NoFlags  满足该条件
     if(child != null && ((MutationMask & fiber.subtreeFlags) !== NoFlags) ){
       nextEffect = child;
@@ -364,4 +376,59 @@ function safelyCallDestroy(current,nearestMountedAncestor,destroy){
   }catch(e){
     console.log(e,'error')
   }
+}
+
+export function commitDeletion(finishedRoot,current,nearestMountedAncestor){
+  unmountHostComponents(finishedRoot, current, nearestMountedAncestor)
+  detachFiberMutation(current)
+}
+
+
+function unmountHostComponents(finishedRoot,current,nearestMountedAncestor){
+  let node = current
+  let currentParentIsContainer
+  let currentParent;
+  let currentParentIsValid = false;
+  while(true){
+
+    if(!currentParentIsValid){
+      let parent = node.return;
+      findParent: while (true) {
+        const parentStateNode = parent.stateNode;
+        switch (parent.tag) {
+          case HostComponent:
+            currentParent = parentStateNode;
+            currentParentIsContainer = false;
+            break findParent;
+          case HostRoot:
+            currentParent = parentStateNode.containerInfo;
+            currentParentIsContainer = true;
+            break findParent;
+        }
+        parent = parent.return;
+
+      }
+      currentParentIsValid = true;
+    }
+
+    if(node.tag === HostComponent || node.tag === HostText){
+      if(currentParentIsContainer){}else{
+        removeChild(currentParent,node.stateNode)
+      }
+    }
+
+
+    if(node == current){
+      return
+    }
+  }
+}
+
+
+function detachFiberMutation(fiber){
+  const alternate = fiber.alternate;
+  if(alternate != null ){
+    alternate.return = null
+  }
+  fiber.return = null
 }

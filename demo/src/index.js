@@ -108,7 +108,18 @@ const CreateReducers = ()=>{
     {initState}
   </div>
 }
-createRoot(rootEl).render(<CreateReducers/ >);
+
+const  DiffDom = ()=>{
+  const [initState,setInitState] = useState(1)
+  return <div onClick={()=>{setInitState( initState === 1 ? 0 : 1)}}>
+    {
+      initState  === 1 && <div>{initState}</div>
+    }
+    <p>1</p>
+  </div>
+}
+
+createRoot(rootEl).render(<DiffDom/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 
