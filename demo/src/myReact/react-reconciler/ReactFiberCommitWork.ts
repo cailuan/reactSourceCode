@@ -1,4 +1,4 @@
-import { appendChildToContainer, commitTextUpdate, commitUpdate, removeChild } from "../react-dom/client/ReactDOMHostConfig"
+import { appendChild, appendChildToContainer, commitTextUpdate, commitUpdate, insertBefore, removeChild } from "../react-dom/client/ReactDOMHostConfig"
 import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, PlacementAndUpdate } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { Passive as HookPassive , HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags"
@@ -47,7 +47,7 @@ function commitMutationEffects_complete(root){
     const fiber = nextEffect;
     commitMutationEffectsOnFiber(fiber,root)
     const sibling = fiber.sibling;
-    if (sibling !== null) {
+    if (sibling != null) {
       nextEffect = sibling;
       return;
     }
@@ -94,10 +94,33 @@ export function commitPlacement(finishedWork){
       parent = parentStateNode.containerInfo;
       isContainer = true;
       break
+    case HostComponent:
+      parent = parentStateNode;
+      isContainer = false;
+      break;
   }
+
+  let before = getHostSibling(finishedWork)
 
   if(isContainer){
     insertOrAppendPlacementNodeIntoContainer(finishedWork,null,parent)
+  }else{
+    insertOrAppendPlacementNode(finishedWork, before, parent)
+  }
+}
+
+function insertOrAppendPlacementNode(node,before,parent){
+  const {tag} = node;
+  const isHost = tag === HostComponent || tag === HostText;
+  if(isHost){
+    const stateNode = node.stateNode;
+    if(before){
+      insertBefore(parent, stateNode, before);
+      
+    }else{
+      appendChild(parent, stateNode);
+      
+    }
   }
 }
 
@@ -218,7 +241,7 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
 }
 
 function commitAttachRef(finishedWork){
-  debugger
+  
   const ref = finishedWork.ref;
   if (ref != null) {
     const instance = finishedWork.stateNode;
@@ -431,4 +454,27 @@ function detachFiberMutation(fiber){
     alternate.return = null
   }
   fiber.return = null
+}
+
+function isHostParent(fiber){
+  return fiber.tag === HostComponent || fiber.tag === HostRoot
+}
+
+function getHostSibling(fiber){
+  let node = fiber
+  siblings:while(true){
+    while(node.sibling == null){
+      if(node.return == null || isHostParent(node.return)){
+        return null
+      }
+      node = node.return
+    } 
+    node.sibling.return = node.return;
+    node = node.sibling;
+
+
+    if(!(node.flags & Placement)){
+      return  node.stateNode
+    }
+  }
 }

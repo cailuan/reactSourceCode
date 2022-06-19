@@ -259,7 +259,7 @@ function commitRootImpl(root, renderPriorityLevel){
   root.finishedWork = null
   root.finishedLanes = NoLanes
   root.callbackPriority = NoLane
-  debugger
+  
   //todo 任务队列 useEffect 挂载和删除
   if((finishedWork.subtreeFlags & PassiveMask) != NoFlags || (finishedWork.flags & PassiveMask ) != NoFlags ){
     if(!rootDoesHavePassiveEffects) {

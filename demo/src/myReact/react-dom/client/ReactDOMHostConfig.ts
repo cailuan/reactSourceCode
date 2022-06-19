@@ -40,6 +40,7 @@ export function prepareUpdate(domElement,type,oldProps,newProps,rootContainerIns
 
 
 export function commitUpdate(domElement,updatePayload,type,oldProps,newProps,internalInstanceHandle){
+  debugger
   updateFiberProps(domElement,newProps)
   updateProperties(domElement, updatePayload, type, oldProps, newProps)
   
@@ -51,4 +52,19 @@ export function commitTextUpdate(textInstance,oldText,newText){
 
 export function removeChild(parentInstance,child){
   parentInstance.removeChild(child)
+}
+
+
+export function insertBefore(parentInstance,child,beforeChild){
+  parentInstance.insertBefore(child, beforeChild);
+}
+
+export function appendChild(parentInstance,child){
+  try{
+    debugger
+    parentInstance.appendChild(child);
+  }catch(e){
+    console.log(e,'====')
+  }
+  
 }

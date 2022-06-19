@@ -150,7 +150,7 @@ function workLoop(hasTimeRemaining, initialTime){
   advanceTimers(currentTime)
   currentTask = peek(taskQueue)
   while(currentTask != null){
-    debugger
+    
     if(currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())){
       break;
     }

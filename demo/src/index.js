@@ -109,15 +109,19 @@ const CreateReducers = ()=>{
   </div>
 }
 
+
 const  DiffDom = ()=>{
-  const [initState,setInitState] = useState(1)
-  return <div onClick={()=>{setInitState( initState === 1 ? 0 : 1)}}>
+  const [initState,setInitState] = useState([31,33,34,35])
+  return <div onClick={()=>{debugger;console.log(initState) ;setInitState( [initState.length,...initState])}}>
     {
-      initState  === 1 && <div>{initState}</div>
+      initState.map(item=>{
+        return <div key={item}>{item}</div>
+      })
     }
-    <p>1</p>
   </div>
 }
+
+
 
 createRoot(rootEl).render(<DiffDom/ >);
 

@@ -597,7 +597,7 @@ function dispatchAction(fiber,queue,action){
 
 export function bailoutHooks(current,workInProgress,lanes){
   if((workInProgress.mode & StrictEffectsMode) != NoMode){
-    debugger
+    
     console.error('bailoutHooks')
   }else{
     workInProgress.flags &= ~(UpdateEffect | PassiveEffect)

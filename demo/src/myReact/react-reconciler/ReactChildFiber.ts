@@ -174,12 +174,12 @@ debugger
     }
 
     const existingChildren = mapRemainingChildren(returnFiber , oldFiber)
-
+    debugger
     for(; newIdx < newChildren.length ; newIdx++){
       const newFiber = updateFromMap(existingChildren , returnFiber, newIdx, newChildren[newIdx], lanes)
       if(newFiber != null){
         if(shouldTrackSideEffects){
-          if (newFiber.alternate !== null) {
+          if (newFiber.alternate != null) {
             existingChildren.delete(newFiber.key == null ? newIdx : newFiber.key)
           }
         }
@@ -265,6 +265,11 @@ debugger
         return existing
       }
     }
+
+    const created = createFiberFromElement(element,returnFiber.mode, lanes)
+    created.ref = coerceRef(returnFiber,current,element)
+    created.return = returnFiber
+    return created
   }
 
   function updateSlot(returnFiber,oldFiber,newChild,lanes){

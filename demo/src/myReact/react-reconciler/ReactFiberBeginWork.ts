@@ -26,7 +26,7 @@ function bailoutOnAlreadyFinishedWork(current,workInProgress,renderLanes){
 
 function markRef(current,workInProgress){
   const ref = workInProgress.ref;
-  debugger
+  
   if((current == null  && ref != null) || (current != null && current.ref != ref )){
     workInProgress.flags |= Ref
     workInProgress.flags |= RefStatic
@@ -37,7 +37,7 @@ function markRef(current,workInProgress){
 export function beginWork(current, workInProgress, renderLanes){
   let updateLanes = workInProgress.lanes;
  
-debugger
+
   if(current != null){
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
