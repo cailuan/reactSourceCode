@@ -349,7 +349,7 @@ function commitPassiveMountEffects_complete(subtreeRoot,root){
       return
     }
     const sibling = fiber.sibling
-    if (sibling !== null) {
+    if (sibling != null) {
       nextEffect = sibling;
       return;
     }

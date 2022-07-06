@@ -110,9 +110,16 @@ const CreateReducers = ()=>{
 }
 
 
+
+let t = 0
 const  DiffDom = ()=>{
   const [initState,setInitState] = useState([31,33,34,35])
-  return <div onClick={()=>{debugger;console.log(initState) ;setInitState( [initState.length,...initState])}}>
+  const changeState = ()=>{
+    
+    setInitState( [t++,...initState].slice(0,4))
+  }
+  console.log('DiffDom')
+  return <div onClick={()=>{debugger ; changeState()}}>
     {
       initState.map(item=>{
         return <div key={item}>{item}</div>
@@ -122,8 +129,29 @@ const  DiffDom = ()=>{
 }
 
 
+const ParentHost = ()=>{
+  const parentRef = useRef(null)
+  useLayoutEffect(()=>{
+    console.log('parent layout',parentRef.current)
+  },[])
+  useEffect(()=>{
+    console.log('parent effect',parentRef.current)
+  },[])
+  return <div ref={parentRef}><Children></Children></div>
+}
+const Children = ()=>{
+  const childrentRef = useRef(null)
+  useLayoutEffect(()=>{
+    console.log('Children layout',childrentRef.current)
+  },[])
+  useEffect(()=>{
+    console.log('Children effect',childrentRef.current)
+  },[])
+  return <div  ref={childrentRef}>Children</div>
+}
 
-createRoot(rootEl).render(<DiffDom/ >);
+
+createRoot(rootEl).render(<ParentHost/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 
