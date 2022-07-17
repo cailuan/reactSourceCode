@@ -167,6 +167,7 @@ function performConcurrentWorkOnRoot(root,didTimeout){
 
 function renderRootSync(root,lanes){
   prepareFreshStack(root,lanes)
+  debugger
   do{
     workLoopSync()
     break

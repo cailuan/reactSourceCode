@@ -1,9 +1,9 @@
-// import React ,{useState}from "react";
+import React from "react";
 // import ReactDOM from "react-dom";
 
+import {createContext} from './myReact/react/react'
 import { createRoot } from "./myReact/react-dom";
-import App from "./demo_0";
-import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect } from "./myReact/react";
+import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext} from "./myReact/react";
 // import {createRoot} from "./myReact/react-dom/client/ReactDOMRoot"
 
 const rootEl = document.getElementById("root");
@@ -151,7 +151,64 @@ const Children = ()=>{
 }
 
 
-createRoot(rootEl).render(<ParentHost/ >);
+const themes = {
+  light: {
+    foreground: "#000000",
+    background: "#eeeeee"
+  },
+  dark: {
+    foreground: "#ffffff",
+    background: "#222222"
+  }
+};
+
+
+
+
+
+const ThemeContext = React.createContext(themes.light);
+const TDarkContext = React.createContext(themes.dark);
+
+
+function App() {
+  return (
+    <ThemeContext.Provider value={themes.light}>
+      <TDarkContext.Provider value={themes.dark}>
+        <Toolbar />
+      </TDarkContext.Provider>
+      
+    </ThemeContext.Provider>
+  );
+}
+
+function Toolbar(props) {
+  return (
+    <div>
+      <ThemedButton />
+    </div>
+  );
+}
+
+function ThemedButton() {
+  const theme = useContext(ThemeContext);
+  const dark = useContext(TDarkContext)
+  return (
+    <div>
+      <div >
+        I am styled by theme context! {theme.background}
+      </div>
+      <div>
+        {dark.background}
+      </div>
+    </div>
+    
+  );
+}
+
+
+
+
+createRoot(rootEl).render(<App/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 

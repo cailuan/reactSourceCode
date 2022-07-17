@@ -2,13 +2,14 @@ import { reconcileChildFibers,mountChildFibers, cloneChildFibers } from "./React
 import { pushHostContainer } from "./ReactFiberHostContext";
 import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
-import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
+import { ContextProvider, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
 import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
-import { prepareToReadContext } from "./ReactFiberNewContext";
+import { prepareToReadContext, pushProvider } from "./ReactFiberNewContext";
 
 let didReceiveUpdate = false
+let hasWarnedAboutUsingNoValuePropOnContextProvider = false
 
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
@@ -32,6 +33,36 @@ function markRef(current,workInProgress){
     workInProgress.flags |= RefStatic
   }
 
+}
+
+function updateContextProvider(current, workInProgress, renderLanes){
+  const providerType = workInProgress.type
+  const context =  providerType._context
+  const newProps = workInProgress.pendingProps;
+  const oldProps = workInProgress.memoizedProps;
+  const newValue = newProps.value;
+
+  if(!('value' in newProps)){
+    if(!hasWarnedAboutUsingNoValuePropOnContextProvider){
+      hasWarnedAboutUsingNoValuePropOnContextProvider = true
+      console.error('The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',)
+
+    }
+   
+  }
+  const providerPropTypes = workInProgress.type.propTypes;
+  if(providerPropTypes){
+    debugger
+  }
+  pushProvider(workInProgress, context, newValue)
+  
+
+  if(oldProps != null){
+    debugger
+  }
+  const newChildren = newProps.children
+  reconcileChildren(current, workInProgress, newChildren, renderLanes)
+  return workInProgress.child
 }
 
 export function beginWork(current, workInProgress, renderLanes){
@@ -78,6 +109,8 @@ export function beginWork(current, workInProgress, renderLanes){
           ? unresolvedProps
           : {} // resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(current,workInProgress,Component,resolvedProps,renderLanes)
+    case ContextProvider:
+      return updateContextProvider(current, workInProgress ,renderLanes)
 
   }
 }

@@ -2,8 +2,9 @@ import { createTextInstance ,createInstance,finalizeInitialChildren, appendIniti
 import { Ref, RefStatic, Snapshot, Update } from "./ReactFiberFlags";
 import { getRootHostContainer } from "./ReactFiberHostContext";
 import { mergeLanes, NoLanes } from "./ReactFiberLane";
+import { popProvider } from "./ReactFiberNewContext";
 import { ProfileMode } from "./ReactTypeOfMode";
-import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
+import { ContextProvider, Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 
 function markRef(workInProgress){
   workInProgress.flags |= Ref
@@ -102,6 +103,11 @@ export function completeWork(current,workInProgress,renderLanes){
 
       bubbleProperties(workInProgress)
       return null
+    case ContextProvider:
+      const context = workInProgress.type._context
+      popProvider(context, workInProgress)
+      return null
+
   }
 }
 

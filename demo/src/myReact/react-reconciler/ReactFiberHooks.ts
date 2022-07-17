@@ -33,6 +33,9 @@ function updateHookTypesDev(){
 }
 
 HooksDispatcherOnMountInDEV = {
+  readContext:()=>{
+
+  },
   useState:(initialState)=>{
     currentHookNameInDev = 'useState'
     mountHookTypesDev()
@@ -85,8 +88,16 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useLayoutEffect';
     mountHookTypesDev()
     return mountLayoutEffect(create,deps)
+  },
+  useContext:(context)=>{
+    currentHookNameInDev = 'useContext';
+    mountHookTypesDev()
+
+    return readContext(context)
   }
 }
+
+
 
 HooksDispatcherOnUpdateInDEV ={
   useState:(initialState)=>{

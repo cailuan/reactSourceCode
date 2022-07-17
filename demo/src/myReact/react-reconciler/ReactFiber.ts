@@ -1,7 +1,8 @@
-import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "../shared/ReactSymbols";
+import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, REACT_PROVIDER_TYPE } from "../shared/ReactSymbols";
 import { NoFlags } from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
-import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags"
+import {resolveForwardRefForHotReloading} from './ReactFiberHotReloading'
+import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer } from "./ReactWorkTags"
 
 export function createHostRootFiber(){
 
@@ -88,6 +89,18 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
     getTag:switch(type){
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children,mode,lanes,key)
+      default :
+        if(typeof type=== 'object' && type != null){
+          switch(type.$$typeof){
+            case REACT_PROVIDER_TYPE:
+              fiberTag = ContextProvider;
+              break getTag
+            case REACT_CONTEXT_TYPE : 
+              fiberTag = ContextConsumer;
+              resolvedType = resolveForwardRefForHotReloading(resolvedType)
+              break getTag
+          }
+        }
     }
   }
   const fiber = createFiber(fiberTag,pendingProps,key,mode)

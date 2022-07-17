@@ -39,3 +39,8 @@ export function useLayoutEffect(create, deps){
   const dispatcher = resolveDispatcher()
   return  dispatcher.useLayoutEffect(create, deps)
 }
+
+export function useContext(Context){
+  const dispatcher = resolveDispatcher()
+  return dispatcher.useContext(Context)
+}
