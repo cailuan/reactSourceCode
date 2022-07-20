@@ -42,7 +42,7 @@ export function enqueueUpdate(fiber,update){
   const sharedQueue = updateQueue.shared
 
   const pending = sharedQueue.pending;
-  if(pending === null){
+  if(pending == null){
     update.next = update
   }
 
@@ -54,7 +54,7 @@ export function enqueueUpdate(fiber,update){
 export function cloneUpdateQueue(current,workInProgress){
   const quene = workInProgress.updateQueue
   const currentQueue = current.updateQueue
-  if(quene === currentQueue){
+  if(quene == currentQueue){
     const clone = {
       baseState : currentQueue.baseState,
       firstBaseUpdate : currentQueue.firstBaseUpdate,
@@ -76,7 +76,7 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
     const lastPendingUpdate =  pendingQueue
     const firstPendingUpdate =  pendingQueue.next
     lastPendingUpdate.next = null
-    if(lastBaseUpdate === null){
+    if(lastBaseUpdate == null){
       firstBaseUpdate = firstPendingUpdate;
     }else {
       lastBaseUpdate.next = firstPendingUpdate
@@ -88,7 +88,7 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
       const currentQueue = current.updateQueue
       const currentLastBaseUpdate = currentQueue.lastBaseUpdate
       if(currentLastBaseUpdate != lastBaseUpdate){
-        if(currentLastBaseUpdate === null){
+        if(currentLastBaseUpdate == null){
           currentQueue.firstBaseUpdate = firstPendingUpdate
         }else{
           currentLastBaseUpdate.next = firstPendingUpdate
@@ -109,9 +109,9 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
       newState =  getStateFromUpdate(workInProgress,queue,update,newState,props,instance)
       let callback = update.callback
       update = update.next
-      if(update === null){
+      if(update == null){
         pendingQueue = queue.shared.pending;
-        if(pendingQueue === null){
+        if(pendingQueue == null){
           break
         }else{
           let lastPendingUpdate = pendingQueue
@@ -124,7 +124,7 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
       }
     }while(true)
 
-    if(newLastBaseUpdate === null){
+    if(newLastBaseUpdate == null){
       newBaseState = newState
     }
 

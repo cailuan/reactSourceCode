@@ -13,7 +13,7 @@ export function appendChildToContainer(container,child){
 }
 
 export function createInstance(type,props,rootContainerInstance,hostContext,internalInstanceHandle){
-  if(typeof props.children === 'string' || typeof props.children === 'number' ){
+  if(typeof props.children == 'string' || typeof props.children == 'number' ){
     const string = '' + props.children;
 
   }
@@ -64,7 +64,7 @@ export function appendChild(parentInstance,child){
     debugger
     parentInstance.appendChild(child);
   }catch(e){
-    console.log(e,'====')
+    console.log(e,'===')
   }
   
 }

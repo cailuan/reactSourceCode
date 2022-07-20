@@ -8,7 +8,7 @@ export function findCurrentFiberUsingSlowPath(fiber){
 }
 
 function getNearestMountedFiber(fiber){
-  if(fiber.type === HostRoot){
+  if(fiber.type == HostRoot){
     return fiber
   }
 }

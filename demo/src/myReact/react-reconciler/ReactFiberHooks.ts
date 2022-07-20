@@ -24,7 +24,7 @@ let currentHook:any = null
 
 function updateHookTypesDev(){
   const hookName = currentHookNameInDev
-  if(hookTypesDev !== null){
+  if(hookTypesDev != null){
     hookTypesUpdateIndexDev++
     if(hookTypesDev[hookTypesUpdateIndexDev] != hookName){
         console.error('hooks error')
@@ -152,6 +152,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useLayoutEffect'
     updateHookTypesDev()
     return updateLayoutEffect(create, deps);
+  },
+  useContext: (context)=>{
+    currentHookNameInDev = 'useLayoutEffect'
+    updateHookTypesDev()
+    return readContext(context)
   }
   
 }
@@ -222,14 +227,14 @@ function mountReducer(reducer,initialArg,init){
 
 function mountCallback(callback,deps){
   const hook =  mountWorkInProgressHook()
-  const nextDeps = deps === undefined ? null : deps
+  const nextDeps = deps == undefined ? null : deps
   hook.memoizedState = [callback, nextDeps];
   return callback;
 }
 
 function updateCallback(callback,deps){
   const hook = updateWorkInProgressHook()
-  const nextDeps = deps === undefined ? null : deps
+  const nextDeps = deps == undefined ? null : deps
   const prevState = hook.memoizedState
   if(prevState != null){
     if(nextDeps != null){
@@ -245,7 +250,7 @@ function updateCallback(callback,deps){
 
 function mountMemo(nextCreate, deps){
   const hook = mountWorkInProgressHook()
-  const nextDeps = deps === undefined ? null : deps;
+  const nextDeps = deps == undefined ? null : deps;
   const nextValue = nextCreate()
   hook.memoizedState = [nextValue,nextDeps]
   return nextValue;
@@ -289,7 +294,7 @@ function updateRef(initialValue){
 
 function mountState(initialState){
   const hook = mountWorkInProgressHook()
-  if(typeof initialState === 'function'){
+  if(typeof initialState == 'function'){
     initialState = initialState()
   }
   hook.memoizedState = hook.baseState = initialState
@@ -380,7 +385,7 @@ function updateReducer(reducer,initialArg,init?:any){
       }
       update = update.next
     } while(update != null && update != first)
-    if(newBaseQueueLast === null){
+    if(newBaseQueueLast == null){
       newBaseState = newState
     }
     if(!Object.is(newState , hook.memoizedState)){
@@ -407,7 +412,7 @@ function updateState(initialState){
 
 function mountEffectImpl(fiberFlags,hookFlags,create,deps){
   const hook = mountWorkInProgressHook()
-  const nextDeps = deps === undefined ? null : deps
+  const nextDeps = deps == undefined ? null : deps
   currentlyRenderingFiber.flags |= fiberFlags
   hook.memoizedState = pushEffect(HookHasEffect | hookFlags , create,undefined,nextDeps)
 }
@@ -448,7 +453,7 @@ function updateEffectImpl(fiberFlags,hookFlags,create,deps){
   if(currentHook != null){
     const prevEffect = currentHook.memoizedState
     destroy = prevEffect.destroy;
-    if (nextDeps !== null) {
+    if (nextDeps != null) {
       const prevDeps = prevEffect.deps;
       if(areHookInputsEqual(nextDeps,prevDeps)){
         hook.memoizedState = pushEffect(hookFlags,create,destroy,nextDeps)
@@ -516,7 +521,7 @@ export function renderWithHooks(current,workInProgress,Component,props,secondArg
   workInProgress.updateQueue = null
   workInProgress.lanes = NoLanes
   hookTypesUpdateIndexDev = -1
-  if (current !== null && current.memoizedState !== null) {
+  if (current != null && current.memoizedState != null) {
     ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
   }else{
     ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV
@@ -558,7 +563,7 @@ function mountHookTypesDev(){
 }
 
 function basicStateReducer(state,action){
-  return typeof action === 'function' ? action(state) : action
+  return typeof action == 'function' ? action(state) : action
 } 
 
 
@@ -582,7 +587,7 @@ function dispatchAction(fiber,queue,action){
     pending.next = update
   }
   queue.pending = update;
-  if(fiber.lanes === NoLanes && (alternate == null || alternate.lanes == NoLanes) ){
+  if(fiber.lanes == NoLanes && (alternate == null || alternate.lanes == NoLanes) ){
     const lastRenderedReducer = queue.lastRenderedReducer;
     if(lastRenderedReducer != null){
       let prevDispatcher  = ReactCurrentDispatcher.current

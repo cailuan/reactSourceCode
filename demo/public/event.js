@@ -9,7 +9,7 @@ setTimeout(()=>{
         e.stopPropagation()
         stopEvent = true
         console.log(e.detail,"e.detail.hazcheeseburger",typeof e.detail.hazcheeseburger)
-        if(typeof e.detail.hazcheeseburger === "string" && !e.detail.hazcheeseburger.match(/nodeName('|")(\\s)?:/)){
+        if(typeof e.detail.hazcheeseburger == "string" && !e.detail.hazcheeseburger.match(/nodeName('|")(\\s)?:/)){
             createModal(e.detail.hazcheeseburger,e.detail.eventInfo)
         }else{
             requestImg(e.detail.nodeKeyName,e.detail.eventInfo)

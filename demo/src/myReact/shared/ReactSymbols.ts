@@ -4,3 +4,5 @@ export const REACT_ELEMENT_TYPE = symbolFor('react.element')
 export const REACT_CONTEXT_TYPE= symbolFor('react.context');
 
 export const REACT_PROVIDER_TYPE = symbolFor('react.provider');
+
+export const REACT_FORWARD_REF_TYPE = symbolFor('react.forward_ref')

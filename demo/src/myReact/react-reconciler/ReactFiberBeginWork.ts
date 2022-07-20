@@ -105,7 +105,7 @@ export function beginWork(current, workInProgress, renderLanes){
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
-        workInProgress.elementType === Component
+        workInProgress.elementType == Component
           ? unresolvedProps
           : {} // resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(current,workInProgress,Component,resolvedProps,renderLanes)
@@ -122,7 +122,7 @@ function mountIndeterminateComponent(_current,workInProgress,Component,renderLan
   
   workInProgress.flags |= PerformedWork
 
-  if(typeof value.render === 'function'){
+  if(typeof value.render == 'function'){
     // todo
   }else{
     workInProgress.tag = FunctionComponent
@@ -150,7 +150,7 @@ function updateHostRoot(current, workInProgress, renderLanes){
 }
 
 function updateHostText(current, workInProgress){
-  if(current === null){
+  if(current == null){
     // tryToClaimNextHydratableInstance(workInProgress);
   }
   return null

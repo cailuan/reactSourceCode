@@ -15,7 +15,7 @@ export function setCurrentUpdatePriority(newPriority){
 }
 
 export function lowerEventPriority(a,b){
-  return a === 0 || a > b ? a : b;
+  return a == 0 || a > b ? a : b;
 }
 
 export const DefaultEventPriority = DefaultLane

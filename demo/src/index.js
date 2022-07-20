@@ -1,7 +1,7 @@
 import React from "react";
 // import ReactDOM from "react-dom";
 
-import {createContext} from './myReact/react/react'
+import {createContext , forwardRef} from './myReact/react/react'
 import { createRoot } from "./myReact/react-dom";
 import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext} from "./myReact/react";
 // import {createRoot} from "./myReact/react-dom/client/ReactDOMRoot"
@@ -192,11 +192,13 @@ function Toolbar(props) {
 function ThemedButton() {
   const theme = useContext(ThemeContext);
   const dark = useContext(TDarkContext)
+  const [initState,setInitState] = useState(1)
   return (
-    <div>
+    <div  onClick={()=>{debugger; setInitState(2)}}>
       <div >
         I am styled by theme context! {theme.background}
       </div>
+      <div>{initState}</div>
       <div>
         {dark.background}
       </div>
@@ -205,10 +207,32 @@ function ThemedButton() {
   );
 }
 
+function RootDom(){
+  const ref = useRef()
+ 
+  return (
+    <div>
+      <FancyInput ref={ref} />
+      <button onClick={() => {ref.current.focus(); console.log(ref.current,'current')}}>
+        调用input的focus方法
+      </button>
+    </div>
+
+  )
+}
+
+const FancyInput = forwardRef((props, ref) => (
+  <div>
+    <input ref={ref} type="text" />
+    <div>我是自定义的函数式组件</div>
+  </div>
+))
 
 
 
-createRoot(rootEl).render(<App/ >);
+
+
+createRoot(rootEl).render(<RootDom/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 

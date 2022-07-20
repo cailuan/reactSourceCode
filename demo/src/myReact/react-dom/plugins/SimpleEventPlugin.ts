@@ -5,7 +5,7 @@ import { SyntheticMouseEvent,SyntheticEvent } from "../events/SyntheticEvent";
 export function extractEvents(dispatchQueue,domEventName,targetInst,nativeEvent,nativeEventTarget,eventSystemFlags,targetContainer){
   const reactName = topLevelEventsToReactNames.get(domEventName)
   const reactEventType = domEventName
-  if (reactName === undefined) {
+  if (reactName == undefined) {
     return;
   }
   let SyntheticEventCtor = SyntheticEvent;
@@ -15,7 +15,7 @@ export function extractEvents(dispatchQueue,domEventName,targetInst,nativeEvent,
       SyntheticEventCtor = SyntheticMouseEvent;
       break;
   }
-  const inCapturePhase =  (eventSystemFlags &  IS_CAPTURE_PHASE) !== 0
+  const inCapturePhase =  (eventSystemFlags &  IS_CAPTURE_PHASE) != 0
   const accumulateTargetOnly = false
   const listeners = accumulateSinglePhaseListeners(targetInst,reactName,nativeEvent.type,inCapturePhase,accumulateTargetOnly,nativeEvent)
   if(listeners.length > 0){

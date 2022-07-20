@@ -33,8 +33,8 @@ function commitMutationEffects_begin(root){
       }
     }
 
-    // todo subtreeFlags (fiber.subtreeFlags & MutationMask) !== NoFlags  满足该条件
-    if(child != null && ((MutationMask & fiber.subtreeFlags) !== NoFlags) ){
+    // todo subtreeFlags (fiber.subtreeFlags & MutationMask) != NoFlags  满足该条件
+    if(child != null && ((MutationMask & fiber.subtreeFlags) != NoFlags) ){
       nextEffect = child;
     }else{
       commitMutationEffects_complete(root)
@@ -111,7 +111,7 @@ export function commitPlacement(finishedWork){
 
 function insertOrAppendPlacementNode(node,before,parent){
   const {tag} = node;
-  const isHost = tag === HostComponent || tag === HostText;
+  const isHost = tag == HostComponent || tag == HostText;
   if(isHost){
     const stateNode = node.stateNode;
     if(before){
@@ -126,7 +126,7 @@ function insertOrAppendPlacementNode(node,before,parent){
 
 function insertOrAppendPlacementNodeIntoContainer(node,before,parent){
   const {tag} = node;
-  const isHost = tag === HostText || tag === HostComponent
+  const isHost = tag == HostText || tag == HostComponent
   if(isHost){
     const stateNode = node.stateNode;
     if(before){
@@ -163,7 +163,7 @@ export function commitWork(current,finishedWork){
       const instance = finishedWork.stateNode;
       if(instance != null){
         const newProps = finishedWork.memoizedProps;
-        const oldProps = current !== null ? current.memoizedProps : newProps;
+        const oldProps = current != null ? current.memoizedProps : newProps;
         const type = finishedWork.type;
         const updatePayload = finishedWork.updateQueue
         finishedWork.updateQueue = null;
@@ -300,7 +300,7 @@ function commitHookEffectListUnmount(flags,finishedWork,nearestMountedAncestor){
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
     do{
-      if((effect.tag & flags) === flags){
+      if((effect.tag & flags) == flags){
         const destroy = effect.destroy;
         effect.destroy = undefined;
         if(destroy != undefined){
@@ -434,7 +434,7 @@ function unmountHostComponents(finishedRoot,current,nearestMountedAncestor){
       currentParentIsValid = true;
     }
 
-    if(node.tag === HostComponent || node.tag === HostText){
+    if(node.tag == HostComponent || node.tag == HostText){
       if(currentParentIsContainer){}else{
         removeChild(currentParent,node.stateNode)
       }
@@ -457,7 +457,7 @@ function detachFiberMutation(fiber){
 }
 
 function isHostParent(fiber){
-  return fiber.tag === HostComponent || fiber.tag === HostRoot
+  return fiber.tag == HostComponent || fiber.tag == HostRoot
 }
 
 function getHostSibling(fiber){

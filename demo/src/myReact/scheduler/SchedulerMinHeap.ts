@@ -5,7 +5,7 @@ export function push (heap,node){
 }
 
 export function pop(heap){
-  if(heap.length === 0) return null
+  if(heap.length == 0) return null
   const first = heap[0]
   const last = heap.pop()
   if(first != last ){
@@ -16,7 +16,7 @@ export function pop(heap){
 }
 
 export function peek(heap){
-  return heap.length === 0 ? null : heap[0]
+  return heap.length == 0 ? null : heap[0]
 }
 
 function siftUp(heap, node, i){

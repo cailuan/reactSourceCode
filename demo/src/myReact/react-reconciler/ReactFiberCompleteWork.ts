@@ -17,7 +17,7 @@ function markUpdate(workInProgress){
 
 let updateHostComponent = function(current,workInProgress,type,newProps,rootContainerInstance){
   const oldProps = current.memoizedProps;
-  if(oldProps === newProps){
+  if(oldProps == newProps){
     return
   }
   const instance = workInProgress.stateNode
@@ -28,7 +28,7 @@ let updateHostComponent = function(current,workInProgress,type,newProps,rootCont
   }
 }
 let updateHostText = function(current,workInProgress,oldText,newText){
-  if(oldText !== newText){
+  if(oldText != newText){
     markUpdate(workInProgress)
   }
 }
@@ -36,7 +36,7 @@ let updateHostText = function(current,workInProgress,oldText,newText){
 const appendAllChildren = function(parent,workInProgress,needsVisibilityToggle,isHidden){
   let node = workInProgress.child;
   while(node != null){
-    if(node.tag === HostComponent || node.tag === HostText){
+    if(node.tag == HostComponent || node.tag == HostText){
       appendInitialChild(parent,node.stateNode)
     }else if(node.child != null){
       node.child.return = node
@@ -95,7 +95,7 @@ export function completeWork(current,workInProgress,renderLanes){
         finalizeInitialChildren(instance,type,newProps,_rootContainerInstance)
 
 
-        if (workInProgress.ref !== null) {
+        if (workInProgress.ref != null) {
           markRef(workInProgress)
         }
       }
@@ -106,6 +106,7 @@ export function completeWork(current,workInProgress,renderLanes){
     case ContextProvider:
       const context = workInProgress.type._context
       popProvider(context, workInProgress)
+      bubbleProperties(workInProgress)
       return null
 
   }
@@ -116,7 +117,7 @@ function bubbleProperties(completedWork){
   let subtreeFlags:any = NoLanes
   let newChildLanes = NoLanes
   if(!didBailout){
-    if((completedWork.mode & ProfileMode) !== NoLanes ){
+    if((completedWork.mode & ProfileMode) != NoLanes ){
       let child = completedWork.child
       while(child != null){
         newChildLanes = mergeLanes(newChildLanes , mergeLanes(child.lanes,child.childLanes))

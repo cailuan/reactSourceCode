@@ -30,7 +30,7 @@ let getCurrentTime = () => performance.now();
 function advanceTimers(currentTime){
   let timer = peek(timerQueue)
   while(timer != null){
-    if(timer.callback === null){
+    if(timer.callback == null){
       pop(timerQueue)
     }else if(timer.startTime <= currentTime){
       pop(timerQueue)
@@ -68,7 +68,7 @@ const performWorkUntilDeadline = ()=>{
 
 }
 
-if(typeof setImmediate === 'function'){
+if(typeof setImmediate == 'function'){
   schedulePerformWorkUntilDeadline = ()=>{
     setImmediate(performWorkUntilDeadline)
   }
@@ -156,13 +156,13 @@ function workLoop(hasTimeRemaining, initialTime){
     }
     var callback = currentTask.callback;
 
-    if (typeof callback === 'function'){
+    if (typeof callback == 'function'){
       currentTask.callback = null
       currentPriorityLevel = currentTask.priorityLevel
       const didUserCallbackTimeout =  currentTime >= currentTask.expirationTime
       
       var continuationCallback = callback(didUserCallbackTimeout)
-      if(currentTask ===  peek(taskQueue)){
+      if(currentTask ==  peek(taskQueue)){
         pop(taskQueue)
       }
       

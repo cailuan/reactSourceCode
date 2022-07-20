@@ -37,7 +37,7 @@ export function requestEventTime(){
 
 export function requestUpdateLane(fiber){
   const mode = fiber.mode
-  if( (mode & ConcurrentMode) === NoMode ){
+  if( (mode & ConcurrentMode) == NoMode ){
     return SyncLane
   } 
   const updateLane =  getCurrentUpdatePriority()
@@ -117,7 +117,7 @@ function ensureRootIsScheduled(root,currentTime){
   markStarvedLanesAsExpired(root, currentTime)
   const newCallbackPriority = getHighestPriorityLane(nextLanes)
   const existingCallbackPriority = root.callbackPriority;
-  if (existingCallbackPriority === newCallbackPriority) {
+  if (existingCallbackPriority == newCallbackPriority) {
     return
   }
 
@@ -226,7 +226,7 @@ function completeUnitOfWork(unitOfWork){
   
   }while(completedWork != null)
 
-  if(workInProgressRootExitStatus === RootIncomplete){
+  if(workInProgressRootExitStatus == RootIncomplete){
     workInProgressRootExitStatus = RootCompleted
   }
 }

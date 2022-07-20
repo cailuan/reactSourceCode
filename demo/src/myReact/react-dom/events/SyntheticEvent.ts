@@ -25,7 +25,7 @@ function createSyntheticEvent(Interface){
         this[propName] = nativeEvent[propName];
       }
     }
-    const defaultPrevented = nativeEvent.defaultPrevented != null  ? nativeEvent.defaultPrevented : nativeEvent.returnValue === false;
+    const defaultPrevented = nativeEvent.defaultPrevented != null  ? nativeEvent.defaultPrevented : nativeEvent.returnValue == false;
     if(defaultPrevented){
       this.isDefaultPrevented = functionThatReturnsTrue
     } else {

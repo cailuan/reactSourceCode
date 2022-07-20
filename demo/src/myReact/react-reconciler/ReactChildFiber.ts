@@ -56,7 +56,7 @@ function ChildReconciler(shouldTrackSideEffects){
       }
     }
 
-    if(element.$$typeof === REACT_ELEMENT_TYPE){
+    if(element.$$typeof == REACT_ELEMENT_TYPE){
       
       const created =  createFiberFromElement(element,returnFiber.mode,lanes)
       created.ref = coerceRef(returnFiber,currentFirstChild,element)
@@ -82,10 +82,10 @@ function ChildReconciler(shouldTrackSideEffects){
       created.return = returnFiber
       return created
     }
-    if(typeof newChild === 'object' && typeof newChild !== null){
+    if(typeof newChild == 'object' && typeof newChild != null){
       switch(newChild.$$typeof){
         case REACT_ELEMENT_TYPE:
-          const created = createFiberFromElement(newChild,returnFiber,lanes)
+          const created = createFiberFromElement(newChild,returnFiber.mode,lanes)
           created.return = returnFiber
           return created
       }
@@ -128,7 +128,7 @@ debugger
         nextOldFiber = oldFiber.sibling
       }
       const newFiber = updateSlot(returnFiber,oldFiber,newChildren[newIdx],lanes)
-      if (newFiber === null) {
+      if (newFiber == null) {
         if(oldFiber == null){
           oldFiber = nextOldFiber
         }
@@ -162,7 +162,7 @@ debugger
         const newFiber = createChild(returnFiber,newChildren[newIdx],lanes)
         lastPlacedIndex = placeChild(newFiber,lastPlacedIndex,newIdx)
 
-        if(previousNewFiber === null){
+        if(previousNewFiber == null){
           resultingFirstChild = newFiber
         }else{
           previousNewFiber.sibling = newFiber
@@ -216,10 +216,10 @@ debugger
   }
 
   function updateFromMap(existingChildren , returnFiber, newIdx, newChild,lanes){
-    if(typeof newChild === 'number' || typeof newChild === 'string'){
+    if(typeof newChild == 'number' || typeof newChild == 'string'){
       debugger
     }
-    if(typeof newChild === 'object' && newChild != null){
+    if(typeof newChild == 'object' && newChild != null){
       switch(newChild.$$typeof){
         case REACT_ELEMENT_TYPE:
           const matchedFiber = existingChildren.get(newChild.key == null ? newIdx : newChild.key ) || null
@@ -258,7 +258,7 @@ debugger
   function updateElement(returnFiber,current,element,lanes){
     const elementType = element.type;
     if(current != null){
-      if(current.elementType === elementType){
+      if(current.elementType == elementType){
         const existing = uFiber(current,element.props)
         existing.ref = coerceRef(returnFiber,current,element)
         existing.return = returnFiber;
@@ -273,7 +273,7 @@ debugger
   }
 
   function updateSlot(returnFiber,oldFiber,newChild,lanes){
-    const key = oldFiber !== null ? oldFiber.key : null;
+    const key = oldFiber != null ? oldFiber.key : null;
     if(typeof newChild == 'string' || typeof newChild == 'number'){
       if(key != null){
         return null
@@ -294,12 +294,12 @@ debugger
   }
 
   function reconcileChildFibers(returnFiber,currentFirstChild,newChild,lanes){
-    let isUnkeyedTopLevelFragment = typeof newChild === 'object' && newChild != null && newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null
+    let isUnkeyedTopLevelFragment = typeof newChild == 'object' && newChild != null && newChild.type == REACT_FRAGMENT_TYPE && newChild.key == null
     if(isUnkeyedTopLevelFragment){
       newChild = newChild.props.children;
     }
 
-    if(typeof newChild === 'object' && newChild != null){
+    if(typeof newChild == 'object' && newChild != null){
       switch(newChild.$$typeof){
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(reconcileSingleElement(returnFiber,currentFirstChild,newChild,lanes))
@@ -310,7 +310,7 @@ debugger
       return reconcileChildrenArray(returnFiber,currentFirstChild,newChild,lanes)
     }
 
-    if(typeof newChild === 'number' || typeof newChild === 'string'){
+    if(typeof newChild == 'number' || typeof newChild == 'string'){
       return placeSingleChild(reconcileSingleTextNode(returnFiber,currentFirstChild,''+newChild,lanes))
     }
     return deleteRemainingChildren(returnFiber,currentFirstChild)

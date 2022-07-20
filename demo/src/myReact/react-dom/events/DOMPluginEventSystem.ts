@@ -57,7 +57,7 @@ function processDispatchQueueItemsInOrder(event,dispatchListeners,inCapturePhase
   if (inCapturePhase) {
     for (let i = dispatchListeners.length - 1; i >= 0; i--) {
       const {instance, currentTarget, listener} = dispatchListeners[i];
-      if (instance !== previousInstance && event.isPropagationStopped()) {
+      if (instance != previousInstance && event.isPropagationStopped()) {
         return;
       }
       executeDispatch(event, listener, currentTarget);
@@ -89,7 +89,7 @@ function extractEvents(dispatchQueue,domEventName,targetInst,nativeEvent,nativeE
 }
 
 function processDispatchQueue(dispatchQueue,eventSystemFlags){
-  const inCapturePhase =  (eventSystemFlags & IS_CAPTURE_PHASE) !== 0
+  const inCapturePhase =  (eventSystemFlags & IS_CAPTURE_PHASE) != 0
   for (let i = 0; i < dispatchQueue.length; i++) {
     const {event, listeners} = dispatchQueue[i];
     processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
@@ -122,14 +122,14 @@ function createDispatchListener(instance,listener,currentTarget){
 
 export function accumulateSinglePhaseListeners(targetFiber,reactName,nativeEventType,inCapturePhase,accumulateTargetOnly,nativeEvent?:any){
 
-  const captureName = reactName !== null ? reactName + 'Capture' : null;
+  const captureName = reactName != null ? reactName + 'Capture' : null;
   const reactEventName = inCapturePhase ? captureName : reactName;
   let listeners:any = []
   let instance = targetFiber;
   let lastHostComponent = null;
   while(instance != null){
     const {stateNode, tag} = instance;
-    if(tag === HostComponent && stateNode != null){
+    if(tag == HostComponent && stateNode != null){
       lastHostComponent = stateNode
       if(reactEventName != null){
         const listener =  getListener(instance,reactEventName)

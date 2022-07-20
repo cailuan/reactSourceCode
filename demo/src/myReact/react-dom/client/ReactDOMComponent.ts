@@ -30,10 +30,10 @@ export function setInitialProperties(domElement,tag,rawProps,rootContainerElemen
 function setInitialDOMProperties(tag,domElement,rootContainerElement,nextProps,isCustomComponentTag){
   for (const propKey in nextProps) {
     const nextProp = nextProps[propKey];
-    if(propKey === CHILDREN){
-      if(typeof nextProp === 'string'){
+    if(propKey == CHILDREN){
+      if(typeof nextProp == 'string'){
         setTextContent(domElement, nextProp)
-      }else if(typeof nextProp === 'number'){
+      }else if(typeof nextProp == 'number'){
         setTextContent(domElement, '' + nextProp)
       }
     }else if(registrationNameDependencies.hasOwnProperty(propKey)){
@@ -74,7 +74,7 @@ export function diffProperties(domElement,tag,lastRawProps,nextRawProps,rootCont
     if(nextProp == lastProp || (nextProp == null && lastProp == null)){
       continue
     }
-    if(propKey === CHILDREN){
+    if(propKey == CHILDREN){
       if(typeof nextProp == 'string' || typeof nextProp == 'number' ){
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp)
       }

@@ -10,7 +10,7 @@ export function createContainer(container,tag){
 
 export function findHostInstanceWithNoPortals(fiber){
   const hostFiber:any =  findCurrentHostFiberWithNoPortals(fiber)
-  if(hostFiber === null) return null
+  if(hostFiber == null) return null
   return hostFiber.stateNode;
 }
 

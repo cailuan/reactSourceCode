@@ -29,7 +29,7 @@ function FiberNode(tag,pendingProps,key,mode){
 
 export function createWorkInProgress(current,pendingProps){
   let workInProgress = current.alternate;
-  if(workInProgress === null || workInProgress === undefined){
+  if(workInProgress == null || workInProgress == undefined){
     workInProgress = createFiber(current.tag,pendingProps,current.key,current.mode)
     workInProgress.elementType = current.elementType;
     workInProgress.type = current.type;
@@ -43,7 +43,8 @@ export function createWorkInProgress(current,pendingProps){
     workInProgress.subtreeFlags = NoFlags;
 
   }
-
+  workInProgress.flags = current.flags // & StaticMask
+  workInProgress.childLanes = current.childLanes
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
   workInProgress.memoizedState = current.memoizedState;
@@ -77,20 +78,20 @@ export function createFiberFromElement(element,mode,lanes){
 export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lanes){
   let fiberTag = IndeterminateComponent
   let resolvedType = type
-  if(typeof type === 'function'){
+  if(typeof type == 'function'){
     if(shouldConstruct(type)){
       // react class
     }else{
       
     }
-  }else if(typeof type === 'string'){
+  }else if(typeof type == 'string'){
     fiberTag = HostComponent
   }else {
     getTag:switch(type){
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children,mode,lanes,key)
       default :
-        if(typeof type=== 'object' && type != null){
+        if(typeof type== 'object' && type != null){
           switch(type.$$typeof){
             case REACT_PROVIDER_TYPE:
               fiberTag = ContextProvider;
