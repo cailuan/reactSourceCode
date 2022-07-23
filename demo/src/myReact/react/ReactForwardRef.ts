@@ -6,18 +6,18 @@ export function forwardRef(render){
     render
   }
   let ownName;
-  Object.defineProperty(elementType,'displayName',{
-    enumerable: false,
-    configurable: true,
-    get: function() {
-      return ownName;
-    },
-    set: function(name) {
-      ownName = name;
-      if (!render.name && !render.displayName) {
-        render.displayName = name;
-      }
-    }
-  })
+  // Object.defineProperty(elementType,'displayName',{
+  //   enumerable: false,
+  //   configurable: true,
+  //   get: function() {
+  //     return ownName;
+  //   },
+  //   set: function(name) {
+  //     ownName = name;
+  //     if (!render.name && !render.displayName) {
+  //       render.displayName = name;
+  //     }
+  //   }
+  // })
   return elementType;
 }

@@ -3,7 +3,7 @@ import React from "react";
 
 import {createContext , forwardRef} from './myReact/react/react'
 import { createRoot } from "./myReact/react-dom";
-import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext} from "./myReact/react";
+import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext, useImperativeHandle} from "./myReact/react";
 // import {createRoot} from "./myReact/react-dom/client/ReactDOMRoot"
 
 const rootEl = document.getElementById("root");
@@ -206,14 +206,13 @@ function ThemedButton() {
     
   );
 }
-
 function RootDom(){
-  const ref = useRef()
- 
+  const inputRef = useRef()
+
   return (
     <div>
-      <FancyInput ref={ref} />
-      <button onClick={() => {ref.current.focus(); ref.current.value = 4 ; console.log(ref.current.value,'current')}}>
+      <FancyInput ref={inputRef} />
+      <button onClick={() => {inputRef.current?.focus();console.log(inputRef.current.value)}}>
         调用input的focus方法
       </button>
     </div>
@@ -221,12 +220,19 @@ function RootDom(){
   )
 }
 
-const FancyInput = forwardRef((props, ref) => (
+const FancyInput = React.forwardRef((props, ref) => {
+  const inputRef = useRef()
+  useImperativeHandle(ref,()=>({
+    focus: () => {
+      inputRef.current.focus();
+    }
+  }))
+  return (
   <div>
-    <input ref={ref} type="text" />
+    <input ref={inputRef} type="text" />
     <div>我是自定义的函数式组件</div>
   </div>
-))
+)})
 
 
 

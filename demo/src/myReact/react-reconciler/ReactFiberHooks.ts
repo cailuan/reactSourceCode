@@ -94,6 +94,11 @@ HooksDispatcherOnMountInDEV = {
     mountHookTypesDev()
 
     return readContext(context)
+  },
+  useImperativeHandle:(ref,create,deps)=>{
+    currentHookNameInDev = 'useImperativeHandle'
+    mountHookTypesDev();
+    return mountImperativeHandle(ref,create,deps)
   }
 }
 
@@ -188,6 +193,36 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
     } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
     }
+  }
+}
+
+function mountImperativeHandle(ref,create,deps){
+  const effectDeps = deps !== null && deps != undefined ? deps.concat([ref]) : null
+  let fiberFlags = UpdateEffect
+  fiberFlags |= LayoutStaticEffect
+
+  if((currentlyRenderingFiber.mode & StrictEffectsMode ) != NoMode){
+    fiberFlags |= MountLayoutDevEffect
+  }
+  return mountEffectImpl(fiberFlags,HookLayout,imperativeHandleEffect.bind(null, create, ref),effectDeps)
+}
+
+function imperativeHandleEffect(create,ref){
+  if(typeof ref === 'function'){
+    const refCallback = ref;
+    const inst = create();
+    refCallback(inst);
+    return () => {
+      refCallback(null);
+    };
+
+  }else if(ref !== null && ref !== undefined){
+    const refObject = ref;
+    const inst = create();
+    refObject.current = inst;
+    return () => {
+      refObject.current = null;
+    };
   }
 }
 

@@ -3,7 +3,7 @@ import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, Pas
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { Passive as HookPassive , HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags"
 import { ProfileMode } from "./ReactTypeOfMode"
-import { FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags"
+import { ForwardRef, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags"
 
 let nextEffect:any = null
 let inProgressLanes = null
@@ -229,6 +229,7 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
           // commitMount(instance, type, props, finishedWork);
         }
         break;
+      case ForwardRef:
       case FunctionComponent:
         commitHookEffectListMount(HookLayout | HookHasEffect,finishedWork )
         break

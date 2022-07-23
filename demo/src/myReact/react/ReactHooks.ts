@@ -44,3 +44,9 @@ export function useContext(Context){
   const dispatcher = resolveDispatcher()
   return dispatcher.useContext(Context)
 }
+
+
+export function useImperativeHandle(ref,create,deps){
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useImperativeHandle(ref, create, deps);
+}
