@@ -1,3 +1,3 @@
 export function resolveForwardRefForHotReloading(type){
-  debugger
+  return type
 }

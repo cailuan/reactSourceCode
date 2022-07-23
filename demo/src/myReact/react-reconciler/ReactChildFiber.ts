@@ -86,6 +86,7 @@ function ChildReconciler(shouldTrackSideEffects){
       switch(newChild.$$typeof){
         case REACT_ELEMENT_TYPE:
           const created = createFiberFromElement(newChild,returnFiber.mode,lanes)
+          created.ref = coerceRef(returnFiber,null,newChild)
           created.return = returnFiber
           return created
       }

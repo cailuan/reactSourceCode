@@ -213,7 +213,7 @@ function RootDom(){
   return (
     <div>
       <FancyInput ref={ref} />
-      <button onClick={() => {ref.current.focus(); console.log(ref.current,'current')}}>
+      <button onClick={() => {ref.current.focus(); ref.current.value = 4 ; console.log(ref.current.value,'current')}}>
         调用input的focus方法
       </button>
     </div>

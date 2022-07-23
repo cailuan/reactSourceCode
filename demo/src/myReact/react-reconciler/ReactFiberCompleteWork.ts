@@ -4,7 +4,7 @@ import { getRootHostContainer } from "./ReactFiberHostContext";
 import { mergeLanes, NoLanes } from "./ReactFiberLane";
 import { popProvider } from "./ReactFiberNewContext";
 import { ProfileMode } from "./ReactTypeOfMode";
-import { ContextProvider, Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
+import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 
 function markRef(workInProgress){
   workInProgress.flags |= Ref
@@ -59,11 +59,11 @@ export function completeWork(current,workInProgress,renderLanes){
   const _rootContainerInstance = getRootHostContainer()
   switch(workInProgress.tag){
     case FunctionComponent:
-      bubbleProperties(workInProgress)
-      return null
+    case ForwardRef:
     case Fragment:
       bubbleProperties(workInProgress)
       return null
+    
     case HostText:
       const newText = newProps;
       if (current && workInProgress.stateNode != null) {

@@ -2,7 +2,7 @@ import { reconcileChildFibers,mountChildFibers, cloneChildFibers } from "./React
 import { pushHostContainer } from "./ReactFiberHostContext";
 import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
-import { ContextProvider, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
+import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
 import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
@@ -33,6 +33,17 @@ function markRef(current,workInProgress){
     workInProgress.flags |= RefStatic
   }
 
+}
+
+function updateForwardRef(current,workInProgress,Component,nextProps,renderLanes){
+  const render = Component.render;
+  const ref = workInProgress.ref;
+  prepareToReadContext(workInProgress,renderLanes)
+  let nextChildren;
+  nextChildren = renderWithHooks(current,workInProgress,render,nextProps,ref,renderLanes)
+  workInProgress.flags |= PerformedWork
+  reconcileChildren(current,workInProgress,nextChildren,renderLanes)
+  return workInProgress.child
 }
 
 function updateContextProvider(current, workInProgress, renderLanes){
@@ -90,6 +101,7 @@ export function beginWork(current, workInProgress, renderLanes){
 
 
   workInProgress.lanes = NoLanes
+  
   switch(workInProgress.tag){
     case IndeterminateComponent:
       return mountIndeterminateComponent(current,workInProgress,workInProgress.type,renderLanes)
@@ -101,7 +113,7 @@ export function beginWork(current, workInProgress, renderLanes){
       return updateHostComponent(current, workInProgress, renderLanes)
     case Fragment:
       return updateFrament(current, workInProgress, renderLanes)
-    case FunctionComponent:
+    case FunctionComponent:{
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
@@ -109,8 +121,27 @@ export function beginWork(current, workInProgress, renderLanes){
           ? unresolvedProps
           : {} // resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(current,workInProgress,Component,resolvedProps,renderLanes)
+    }
+     
     case ContextProvider:
       return updateContextProvider(current, workInProgress ,renderLanes)
+
+    case ForwardRef:{
+      const type = workInProgress.type
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === type
+          ? unresolvedProps
+          : {} //resolveDefaultProps(type, unresolvedProps)
+      return updateForwardRef(
+        current,
+        workInProgress,
+        type,
+        resolvedProps,
+        renderLanes,)
+    }
+      
+
 
   }
 }
