@@ -162,6 +162,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useLayoutEffect'
     updateHookTypesDev()
     return readContext(context)
+  },
+  useImperativeHandle: (ref,create,deps)=>{
+    currentHookNameInDev = 'useImperativeHandle';
+    updateHookTypesDev();
+    return updateImperativeHandle(ref, create, deps)
   }
   
 }
@@ -194,6 +199,11 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
       ReactCurrentDispatcher.current = prevDispatcher;
     }
   }
+}
+
+function updateImperativeHandle(ref,create,deps){
+  const effectDeps = deps !== null && deps !== undefined ? deps.concat([ref]) : null;
+  return updateEffectImpl(UpdateEffect,HookLayout,imperativeHandleEffect.bind(null,create,ref),effectDeps)
 }
 
 function mountImperativeHandle(ref,create,deps){
