@@ -161,8 +161,10 @@ debugger
     if(oldFiber == null){
       for(; newIdx < newChildren.length ; newIdx++){
         const newFiber = createChild(returnFiber,newChildren[newIdx],lanes)
-        lastPlacedIndex = placeChild(newFiber,lastPlacedIndex,newIdx)
 
+        if(newFiber == null) continue;
+        lastPlacedIndex = placeChild(newFiber,lastPlacedIndex,newIdx)
+        
         if(previousNewFiber == null){
           resultingFirstChild = newFiber
         }else{

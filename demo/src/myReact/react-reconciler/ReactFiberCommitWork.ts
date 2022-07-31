@@ -57,7 +57,12 @@ function commitMutationEffects_complete(root){
 
 function commitMutationEffectsOnFiber(finishedWork,root){
   console.log(finishedWork,"finishedWork")
+  const current = finishedWork.alternate;
+
   const flags = finishedWork.flags;
+
+
+  
   const primaryFlags = flags & (Placement | Update)
   switch(primaryFlags){
     case Placement:

@@ -50,3 +50,9 @@ export function useImperativeHandle(ref,create,deps){
   const dispatcher = resolveDispatcher();
   return dispatcher.useImperativeHandle(ref, create, deps);
 }
+
+
+export function useTransition(){
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useTransition();
+}

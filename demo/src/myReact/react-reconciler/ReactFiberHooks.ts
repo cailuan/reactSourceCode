@@ -1,5 +1,6 @@
 import objectIs from "../shared/objectIs";
 import ReactSharedInternals from "../shared/ReactSharedInternals"
+import { getCurrentUpdatePriority, setCurrentUpdatePriority ,ContinuousEventPriority, higherEventPriority} from "./ReactEventPriorities";
 import { markWorkInProgressReceivedUpdate } from "./ReactFiberBeginWork";
 import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect, Update} from "./ReactFiberFlags";
 import { NoLanes ,removeLanes } from "./ReactFiberLane";
@@ -7,7 +8,7 @@ import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags";
 import { NoMode, StrictEffectsMode } from "./ReactTypeOfMode";
-const {ReactCurrentDispatcher} = ReactSharedInternals
+const {ReactCurrentDispatcher , ReactCurrentBatchConfig} = ReactSharedInternals
 
 let currentHookNameInDev:string|null = null
 let HooksDispatcherOnMountInDEV:any = null
@@ -99,6 +100,11 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useImperativeHandle'
     mountHookTypesDev();
     return mountImperativeHandle(ref,create,deps)
+  },
+  useTransition:()=>{
+    currentHookNameInDev = 'useTransition';
+    mountHookTypesDev();
+    return mountTransition()
   }
 }
 
@@ -167,6 +173,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useImperativeHandle';
     updateHookTypesDev();
     return updateImperativeHandle(ref, create, deps)
+  },
+  useTransition: ()=>{
+    currentHookNameInDev = 'useTransition';
+    updateHookTypesDev()
+    return updateTransition()
   }
   
 }
@@ -200,6 +211,57 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
     }
   }
 }
+
+function updateTransition(){
+  const [isPending] = updateState(false)
+  const hook =  updateWorkInProgressHook()
+  const start =  hook.memoizedState
+  return [isPending, start];
+
+}
+
+function startTransition(setPending,callback,options){
+  const previousPriority =  getCurrentUpdatePriority()
+  setCurrentUpdatePriority(higherEventPriority(previousPriority,ContinuousEventPriority))
+  setPending(true)
+
+  const prevTransition = ReactCurrentBatchConfig.transition
+  ReactCurrentBatchConfig.transition = {} ;
+  const currentTransition = ReactCurrentBatchConfig.transition;
+  
+  ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+
+  try{
+    setPending(false);
+    callback();
+  }finally{
+    setCurrentUpdatePriority(previousPriority)
+    ReactCurrentBatchConfig.transition = prevTransition;
+    if (prevTransition === null && currentTransition._updatedFibers) {
+      const updatedFibersCount = currentTransition._updatedFibers.size;
+      if (updatedFibersCount > 10) {
+        console.warn(
+          'Detected a large number of updates inside startTransition. ' +
+            'If this is due to a subscription please re-write it to use React provided hooks. ' +
+            'Otherwise concurrent mode guarantees are off the table.',
+        );
+      }
+      currentTransition._updatedFibers.clear();
+    }
+  }
+
+}
+
+function mountTransition(){
+  const [ isPending , setPending] = mountState(false)
+  const start = startTransition.bind(null, setPending);
+
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = start;
+  return [isPending, start];
+}
+
+
 
 function updateImperativeHandle(ref,create,deps){
   const effectDeps = deps !== null && deps !== undefined ? deps.concat([ref]) : null;
@@ -266,7 +328,7 @@ function mountReducer(reducer,initialArg,init){
     lastRenderedReducer : reducer,
     lastRenderedState : initialState
   })
-  const dispatch = (queue.dispatch = dispatchAction.bind(null,currentlyRenderingFiber,queue) as any)
+  const dispatch = (queue.dispatch = dispatchSetState.bind(null,currentlyRenderingFiber,queue) as any)
   return [hook.memoizedState,dispatch]
 }
 
@@ -353,7 +415,7 @@ function mountState(initialState){
     lastRenderedState : initialState
   }
 
-  const dispatch = quene.dispatch = dispatchAction.bind(null,currentlyRenderingFiber,quene)
+  const dispatch = quene.dispatch = dispatchSetState.bind(null,currentlyRenderingFiber,quene)
 
   return [hook.memoizedState,dispatch]
 
@@ -612,7 +674,7 @@ function basicStateReducer(state,action){
 } 
 
 
-function dispatchAction(fiber,queue,action){
+function dispatchSetState(fiber,queue,action){
   const eventTime = requestEventTime()
   const lane = requestUpdateLane(fiber)
   const update:any = {

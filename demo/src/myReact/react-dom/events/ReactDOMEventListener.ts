@@ -26,6 +26,6 @@ export function attemptToDispatchEvent(domEventName,eventSystemFlags,targetConta
 }
 
 function dispatchDiscreteEvent(domEventName,eventSystemFlags,container,nativeEvent){
-  debugger
+
   discreteUpdates(dispatchEvent,domEventName,eventSystemFlags,container,nativeEvent)
 }

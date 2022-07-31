@@ -3,7 +3,7 @@ import React from "react";
 
 import {createContext , forwardRef} from './myReact/react/react'
 import { createRoot } from "./myReact/react-dom";
-import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext, useImperativeHandle} from "./myReact/react";
+import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext, useImperativeHandle,useTransition} from "./myReact/react";
 // import {createRoot} from "./myReact/react-dom/client/ReactDOMRoot"
 
 const rootEl = document.getElementById("root");
@@ -234,11 +234,28 @@ const FancyInput = React.forwardRef((props, ref) => {
   </div>
 )})
 
+function Transition() {
+  debugger
+  const [isPending, startTransition] = useTransition();
+  const [count, setCount] = useState(0);
+  
+  function handleClick() {
+    debugger
+    startTransition(() => {
+      setCount(c => c + 1);
+    })
+  }
+  console.log(isPending,'isPending')
+  return (
+    <div>
+      {isPending && <div >1111</div>}
+      <button onClick={handleClick}>{count}</button>
+    </div>
+  );
+}
 
 
-
-
-createRoot(rootEl).render(<RootDom/ >);
+createRoot(rootEl).render(<Transition/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 
