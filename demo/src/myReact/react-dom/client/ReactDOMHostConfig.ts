@@ -1,3 +1,4 @@
+import { COMMENT_NODE } from "../../shared/HTMLNodeType";
 import { createTextNode,createElement,setInitialProperties, diffProperties, updateProperties } from "./ReactDOMComponent"
 import { precacheFiberNode, updateFiberProps } from "./ReactDOMComponentTree";
 
@@ -40,9 +41,9 @@ export function prepareUpdate(domElement,type,oldProps,newProps,rootContainerIns
 
 
 export function commitUpdate(domElement,updatePayload,type,oldProps,newProps,internalInstanceHandle){
-  debugger
-  updateFiberProps(domElement,newProps)
   updateProperties(domElement, updatePayload, type, oldProps, newProps)
+  updateFiberProps(domElement,newProps)
+
   
 }
  
@@ -64,7 +65,22 @@ export function appendChild(parentInstance,child){
     debugger
     parentInstance.appendChild(child);
   }catch(e){
-    console.log(e,'===')
+    console.log(e,'==')
   }
   
 }
+
+
+export function removeChildFromContainer(
+  container,
+  child,
+): void {
+  
+  if (container.nodeType == COMMENT_NODE) {
+    (container.parentNode).removeChild(child);
+  } else {
+    container.removeChild(child);
+  }
+}
+
+export function getPublicInstance(instance){return instance}

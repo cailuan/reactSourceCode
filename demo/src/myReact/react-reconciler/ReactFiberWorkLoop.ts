@@ -5,9 +5,10 @@ import { createWorkInProgress } from "./ReactFiber";
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork'
 import { commitMutationEffects, commitBeforeMutationEffects, commitLayoutEffects, commitPassiveUnmountEffects ,commitPassiveMountEffects} from "./ReactFiberCommitWork";
 import { completeWork } from "./ReactFiberCompleteWork";
+import { finishQueueingConcurrentUpdates } from "./ReactFiberConcurrentUpdates";
 import { NoFlags, PassiveMask } from "./ReactFiberFlags";
 import { scheduleMicrotask } from "./ReactFiberHostConfig";
-import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane } from "./ReactFiberLane"
+import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane, includesSomeLane } from "./ReactFiberLane"
 import { scheduleSyncCallback,flushSyncCallbacks } from "./ReactFiberSyncTaskQueue";
 import { LegacyRoot } from "./ReactRootTags";
 import { ConcurrentMode, NoMode } from "./ReactTypeOfMode";
@@ -24,6 +25,7 @@ let workInProgress:any = null
 let workInProgressRootRenderLanes = NoLanes
 let workInProgressRootExitStatus = RootIncomplete
 let rootWithPendingPassiveEffects:any = null
+let pendingPassiveTransitions = null
 
 let rootDoesHavePassiveEffects = false
 
@@ -66,11 +68,13 @@ export function flushPassiveEffects(){
 function flushPassiveEffectsImpl(){
   if(rootWithPendingPassiveEffects == null) return false
   const root = rootWithPendingPassiveEffects;
+  const transitions = pendingPassiveTransitions;
+  pendingPassiveTransitions = null;
   const lanes = pendingPassiveEffectsLanes;
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsLanes = NoLanes
   commitPassiveUnmountEffects(root.current)
-  commitPassiveMountEffects(root,root.current)
+  commitPassiveMountEffects(root,root.current,lanes,transitions)
 }
 
 
@@ -167,7 +171,7 @@ function performConcurrentWorkOnRoot(root,didTimeout){
 
 function renderRootSync(root,lanes){
   prepareFreshStack(root,lanes)
-  debugger
+  
   do{
     workLoopSync()
     break
@@ -176,10 +180,16 @@ function renderRootSync(root,lanes){
 }
 
 function prepareFreshStack(root,lanes){
+  root.finishedWork = null
+  root.finishedLanes = NoLanes
+
+
   workInProgressRoot = root
   workInProgress = createWorkInProgress(root.current,null)
   workInProgressRootRenderLanes = subtreeRenderLanes = lanes
-
+  finishQueueingConcurrentUpdates()
+  
+  return workInProgress
 }
 
 function workLoopSync(){
@@ -280,11 +290,17 @@ function commitRootImpl(root, renderPriorityLevel){
 
   commitLayoutEffects(finishedWork, root, lanes);
 
+
+
   const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
   if(rootDidHavePassiveEffects){
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
+  }
+
+  if(includesSomeLane(pendingPassiveEffectsLanes,SyncLane)){
+    flushPassiveEffects()
   }
   
   flushSyncCallbacks()

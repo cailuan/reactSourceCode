@@ -1,5 +1,6 @@
 import { registrationNameDependencies } from "../events/EventRegistry";
 import { setValueForProperty } from "./DOMPropertyOperations";
+import setTextContent from "./setTextContent";
 
 const CHILDREN = 'children';
 const STYLE = 'style';
@@ -49,9 +50,9 @@ function setInitialDOMProperties(tag,domElement,rootContainerElement,nextProps,i
   }
 }
 
-function setTextContent(node,text){
-  node.textContent = text;
-}
+// function setTextContent(node,text){
+//   node.textContent = text;
+// }
 
 
 export function diffProperties(domElement,tag,lastRawProps,nextRawProps,rootContainerElement){
@@ -92,7 +93,9 @@ function updateDOMProperties(domElement,updatePayload,wasCustomComponentTag,isCu
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
     if(propKey == CHILDREN){
-      setTextContent(domElement,propValue)
+      // setTextContent(domElement,propValue)
+      setTextContent(domElement, propValue)
+
     }
   }
 }

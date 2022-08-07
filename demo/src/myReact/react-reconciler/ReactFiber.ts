@@ -41,6 +41,7 @@ export function createWorkInProgress(current,pendingProps){
     workInProgress.type = current.type;
     workInProgress.flags = NoFlags;
     workInProgress.subtreeFlags = NoFlags;
+    workInProgress.deletions = null;
 
   }
   workInProgress.flags = current.flags // & StaticMask

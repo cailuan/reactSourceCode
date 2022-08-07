@@ -250,7 +250,9 @@ debugger
 
   function updateTextNode(returnFiber,current,textContent,lanes){
     if(current == null  || current.tag != HostText){
-      debugger
+      let created = createFiberFromText(textContent,returnFiber.mode,lanes)
+      created.return = returnFiber;
+      return created;
     }else{
       const existing = uFiber(current,textContent)
       existing.return = returnFiber;

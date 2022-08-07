@@ -26,6 +26,7 @@ const Host = ()=>{
     setInitState(2+initState)
     setTimeout(()=>{
       setInitState(5+initState)
+      setInitState(3+initState)
     },2)
     console.log('host')}}>{initState}</div>
 }
@@ -212,7 +213,7 @@ function RootDom(){
   return (
     <div>
       <FancyInput ref={inputRef} />
-      <button onClick={() => {inputRef.current?.focus();console.log(inputRef.current.value)}}>
+      <button onClick={() => {inputRef.current?.focus();console.log(inputRef.current)}}>
         调用input的focus方法
       </button>
     </div>
@@ -233,29 +234,37 @@ const FancyInput = React.forwardRef((props, ref) => {
     <div>我是自定义的函数式组件</div>
   </div>
 )})
-
 function Transition() {
-  debugger
-  const [isPending, startTransition] = useTransition();
+  useEffect(()=>{
+    console.log('useEffect')
+  },[])
+
+  useLayoutEffect(()=>{
+    console.log('useLayoutEffect')
+  })
+  // const cr = useRef(null)
+  // const [isPending, startTransition] = useTransition();
   const [count, setCount] = useState(0);
-  
+  // console.log(cr.current)
   function handleClick() {
-    debugger
-    startTransition(() => {
+  //   console.log(cr.current)
+  // //   startTransition(() => {
       setCount(c => c + 1);
-    })
+  // //   })
   }
-  console.log(isPending,'isPending')
+  // console.log(isPending,'isPending')
   return (
-    <div>
-      {isPending && <div >1111</div>}
-      <button onClick={handleClick}>{count}</button>
+    <div  >
+      {/* 111 */}
+  
+      {count == 1 && 11}
+      <button onClick={handleClick}>{count}3</button>
     </div>
   );
 }
 
 
-createRoot(rootEl).render(<Transition/ >);
+createRoot(rootEl).render(<Host/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 

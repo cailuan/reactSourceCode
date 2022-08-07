@@ -130,7 +130,7 @@ export function beginWork(current, workInProgress, renderLanes){
       const type = workInProgress.type
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
-        workInProgress.elementType === type
+        workInProgress.elementType == type
           ? unresolvedProps
           : {} //resolveDefaultProps(type, unresolvedProps)
       return updateForwardRef(

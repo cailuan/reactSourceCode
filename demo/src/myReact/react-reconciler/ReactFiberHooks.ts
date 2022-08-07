@@ -2,6 +2,7 @@ import objectIs from "../shared/objectIs";
 import ReactSharedInternals from "../shared/ReactSharedInternals"
 import { getCurrentUpdatePriority, setCurrentUpdatePriority ,ContinuousEventPriority, higherEventPriority} from "./ReactEventPriorities";
 import { markWorkInProgressReceivedUpdate } from "./ReactFiberBeginWork";
+import { enqueueConcurrentHookUpdate } from "./ReactFiberConcurrentUpdates";
 import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect, Update} from "./ReactFiberFlags";
 import { NoLanes ,removeLanes } from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
@@ -237,7 +238,7 @@ function startTransition(setPending,callback,options){
   }finally{
     setCurrentUpdatePriority(previousPriority)
     ReactCurrentBatchConfig.transition = prevTransition;
-    if (prevTransition === null && currentTransition._updatedFibers) {
+    if (prevTransition == null && currentTransition._updatedFibers) {
       const updatedFibersCount = currentTransition._updatedFibers.size;
       if (updatedFibersCount > 10) {
         console.warn(
@@ -264,12 +265,12 @@ function mountTransition(){
 
 
 function updateImperativeHandle(ref,create,deps){
-  const effectDeps = deps !== null && deps !== undefined ? deps.concat([ref]) : null;
+  const effectDeps = deps != null && deps != undefined ? deps.concat([ref]) : null;
   return updateEffectImpl(UpdateEffect,HookLayout,imperativeHandleEffect.bind(null,create,ref),effectDeps)
 }
 
 function mountImperativeHandle(ref,create,deps){
-  const effectDeps = deps !== null && deps != undefined ? deps.concat([ref]) : null
+  const effectDeps = deps != null && deps != undefined ? deps.concat([ref]) : null
   let fiberFlags = UpdateEffect
   fiberFlags |= LayoutStaticEffect
 
@@ -280,7 +281,7 @@ function mountImperativeHandle(ref,create,deps){
 }
 
 function imperativeHandleEffect(create,ref){
-  if(typeof ref === 'function'){
+  if(typeof ref == 'function'){
     const refCallback = ref;
     const inst = create();
     refCallback(inst);
@@ -288,7 +289,7 @@ function imperativeHandleEffect(create,ref){
       refCallback(null);
     };
 
-  }else if(ref !== null && ref !== undefined){
+  }else if(ref != null && ref != undefined){
     const refObject = ref;
     const inst = create();
     refObject.current = inst;
@@ -684,8 +685,54 @@ function dispatchSetState(fiber,queue,action){
     eagerState : null,
     next:null
   }
-  const alternate = fiber.alternate;
 
+  if(isRenderPhaseUpdate(fiber)){
+    enqueueRenderPhaseUpdate(queue, update);
+  }else{
+
+    const alternate = fiber.alternate;
+
+
+    if(fiber.lanes == NoLanes && (alternate == null || alternate.lanes == NoLanes) ){
+      const lastRenderedReducer = queue.lastRenderedReducer;
+      if(lastRenderedReducer != null){
+        let prevDispatcher  = ReactCurrentDispatcher.current
+  
+        ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+        try {
+          const currentState = queue.lastRenderedState
+          const eagerState = lastRenderedReducer(currentState,action)
+          update.eagerReducer = lastRenderedReducer
+          update.eagerState = eagerState;
+          if(Object.is(eagerState, currentState)){
+            return
+          }
+        }finally{
+      
+          ReactCurrentDispatcher.current = prevDispatcher;
+        }
+      }
+    }
+
+  }
+
+
+
+  enqueueConcurrentHookUpdate(fiber,queue,update,lane)
+
+
+  scheduleUpdateOnFiber(fiber,lane,eventTime)
+}
+
+function isRenderPhaseUpdate(fiber){
+  const alternate = fiber.alternate;
+  return (
+    fiber == currentlyRenderingFiber || (alternate != null && alternate == currentlyRenderingFiber)
+  )
+}
+
+function enqueueRenderPhaseUpdate(queue,update){
+  // didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
   const pending = queue.pending
   if(pending == null){
     update.next = update
@@ -694,27 +741,6 @@ function dispatchSetState(fiber,queue,action){
     pending.next = update
   }
   queue.pending = update;
-  if(fiber.lanes == NoLanes && (alternate == null || alternate.lanes == NoLanes) ){
-    const lastRenderedReducer = queue.lastRenderedReducer;
-    if(lastRenderedReducer != null){
-      let prevDispatcher  = ReactCurrentDispatcher.current
-
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
-      try {
-        const currentState = queue.lastRenderedState
-        const eagerState = lastRenderedReducer(currentState,action)
-        update.eagerReducer = lastRenderedReducer
-        update.eagerState = eagerState;
-        if(Object.is(eagerState, currentState)){
-          return
-        }
-      }finally{
-    
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
-    }
-  }
-  scheduleUpdateOnFiber(fiber,lane,eventTime)
 }
 
 
