@@ -4,7 +4,7 @@ import { getCurrentUpdatePriority, setCurrentUpdatePriority ,ContinuousEventPrio
 import { markWorkInProgressReceivedUpdate } from "./ReactFiberBeginWork";
 import { enqueueConcurrentHookUpdate } from "./ReactFiberConcurrentUpdates";
 import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect, Update} from "./ReactFiberFlags";
-import { NoLanes ,removeLanes } from "./ReactFiberLane";
+import { NoLanes ,removeLanes,isSubsetOfLanes, NoLane ,isTransitionLane ,intersectLanes, mergeLanes} from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags";
@@ -18,6 +18,8 @@ let workInProgressHook:any = null
 let currentlyRenderingFiber:any = null
 let hookTypesDev:any = null
 let InvalidNestedHooksDispatcherOnUpdateInDEV:any = null
+
+let renderLanes = NoLanes;
 
 let hookTypesUpdateIndexDev = -1
 
@@ -480,21 +482,56 @@ function updateReducer(reducer,initialArg,init?:any){
     const first = baseQueue.next;
     let newState = current.baseState;
     let newBaseState = null;
-    let newBaseQueueFirst = null;
-    let newBaseQueueLast = null;
+    let newBaseQueueFirst:any = null;
+    let newBaseQueueLast:any = null;
     let update = first;
     do{
       const updateLane = update.lane;
-      if(update.eagerReducer == reducer){
-        newState = update.eagerState
+
+      const isHiddenUpdate = updateLane != update.lane;
+      const shouldSkipUpdate = !isSubsetOfLanes(renderLanes,updateLane)
+      if(shouldSkipUpdate){
+        const clone = {
+          lane: updateLane,
+          action: update.action,
+          hasEagerState: update.hasEagerState,
+          eagerState: update.eagerState,
+          next:null
+        }
+        if (newBaseQueueLast === null) {
+          newBaseQueueFirst = newBaseQueueLast = clone;
+          newBaseState = newState;
+        } else {
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+        currentlyRenderingFiber.lanes = mergeLanes(currentlyRenderingFiber.lanes , updateLane)
       }else{
-        const action = update.action;
-        newState = reducer(newState, action);
+        if(newBaseQueueLast){
+          const clone= {
+            lane: NoLane,
+            action: update.action,
+            hasEagerState: update.hasEagerState,
+            eagerState: update.eagerState,
+            next:  null,
+          }
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+        if(update.eagerReducer ){
+          newState = update.eagerState
+        }else{
+          const action = update.action;
+          newState = reducer(newState, action);
+        }
       }
+
+
+      
       update = update.next
     } while(update != null && update != first)
     if(newBaseQueueLast == null){
       newBaseState = newState
+    }else{
+      newBaseQueueLast.next = newBaseQueueFirst
     }
     if(!Object.is(newState , hook.memoizedState)){
       markWorkInProgressReceivedUpdate()
@@ -624,6 +661,7 @@ export const ContextOnlyDispatcher:any = {
 }
 
 export function renderWithHooks(current,workInProgress,Component,props,secondArg,nextRenderLanes){
+  renderLanes = nextRenderLanes;
   currentlyRenderingFiber = workInProgress
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null
@@ -640,6 +678,7 @@ export function renderWithHooks(current,workInProgress,Component,props,secondArg
   currentlyRenderingFiber = null
   currentHook = null;
   workInProgressHook = null;
+  renderLanes = NoLanes;
   return children
 }
 
@@ -718,10 +757,21 @@ function dispatchSetState(fiber,queue,action){
 
 
 
-  enqueueConcurrentHookUpdate(fiber,queue,update,lane)
+  const root = enqueueConcurrentHookUpdate(fiber,queue,update,lane)
 
 
   scheduleUpdateOnFiber(fiber,lane,eventTime)
+  entangleTransitionUpdate(root,queue,lane)
+}
+
+function entangleTransitionUpdate(root,queue,lane){
+  if(isTransitionLane(lane)){
+    let queueLanes = queue.lanes;
+    queueLanes  = intersectLanes(queueLanes, root.pendingLanes)
+    const newQueueLanes = mergeLanes(queueLanes, lane);
+    queue.lanes = newQueueLanes;
+
+  }
 }
 
 function isRenderPhaseUpdate(fiber){

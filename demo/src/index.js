@@ -116,8 +116,9 @@ let t = 0
 const  DiffDom = ()=>{
   const [initState,setInitState] = useState([31,33,34,35])
   const changeState = ()=>{
-    
-    setInitState( [t++,...initState].slice(0,4))
+    let [f,...l] = initState
+    setInitState( [f,t++,...l])
+
   }
   console.log('DiffDom')
   return <div onClick={()=>{debugger ; changeState()}}>
@@ -235,36 +236,30 @@ const FancyInput = React.forwardRef((props, ref) => {
   </div>
 )})
 function Transition() {
-  useEffect(()=>{
-    console.log('useEffect')
-  },[])
-
-  useLayoutEffect(()=>{
-    console.log('useLayoutEffect')
-  })
-  // const cr = useRef(null)
-  // const [isPending, startTransition] = useTransition();
+  // const crs = useRef(null)
+  const [isPending, startTransition] = useTransition();
   const [count, setCount] = useState(0);
   // console.log(cr.current)
   function handleClick() {
   //   console.log(cr.current)
-  // //   startTransition(() => {
+  debugger
+    startTransition(() => {
       setCount(c => c + 1);
-  // //   })
+    })
   }
   // console.log(isPending,'isPending')
   return (
     <div  >
       {/* 111 */}
   
-      {count == 1 && 11}
+      {isPending && 11}
       <button onClick={handleClick}>{count}3</button>
     </div>
   );
 }
 
 
-createRoot(rootEl).render(<Host/ >);
+createRoot(rootEl).render(<Transition/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 

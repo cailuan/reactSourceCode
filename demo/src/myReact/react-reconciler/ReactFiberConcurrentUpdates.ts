@@ -27,6 +27,10 @@ export function enqueueConcurrentHookUpdate(fiber,quene,update,lane){
 }
 
 
+export function getConcurrentlyUpdatedLanes(){
+  return concurrentlyUpdatedLanes;
+}
+
 
 function getRootForUpdatedFiber(sourceFiber){
   let node = sourceFiber;
@@ -67,6 +71,7 @@ export function finishQueueingConcurrentUpdates(){
     }
 
     if(lane != NoLane){
+    
       markUpdateLaneFromFiberToRoot(fiber,update,lane)
     }
 

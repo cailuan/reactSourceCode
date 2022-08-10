@@ -27,6 +27,10 @@ var currentPriorityLevel =  NormalPriority
 
 let getCurrentTime = () => performance.now();
 
+export function now () {
+  return performance.now();
+} 
+
 function advanceTimers(currentTime){
   let timer = peek(timerQueue)
   while(timer != null){

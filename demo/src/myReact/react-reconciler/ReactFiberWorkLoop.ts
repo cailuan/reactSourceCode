@@ -1,15 +1,17 @@
-import { scheduleCallback } from "../scheduler/scheduler";
+import ReactSharedInternals from "../react/ReactSharedInternals";
+import { now, scheduleCallback } from "../scheduler/scheduler";
 import { NormalPriority as NormalSchedulerPriority } from "../scheduler/SchedulerPriorities";
 import { DiscreteEventPriority, getCurrentUpdatePriority, lanesToEventPriority, setCurrentUpdatePriority ,lowerEventPriority,DefaultEventPriority} from "./ReactEventPriorities";
 import { createWorkInProgress } from "./ReactFiber";
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork'
 import { commitMutationEffects, commitBeforeMutationEffects, commitLayoutEffects, commitPassiveUnmountEffects ,commitPassiveMountEffects} from "./ReactFiberCommitWork";
 import { completeWork } from "./ReactFiberCompleteWork";
-import { finishQueueingConcurrentUpdates } from "./ReactFiberConcurrentUpdates";
+import { finishQueueingConcurrentUpdates, getConcurrentlyUpdatedLanes } from "./ReactFiberConcurrentUpdates";
 import { NoFlags, PassiveMask } from "./ReactFiberFlags";
 import { scheduleMicrotask } from "./ReactFiberHostConfig";
-import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane, includesSomeLane } from "./ReactFiberLane"
+import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane, includesSomeLane,claimNextTransitionLane } from "./ReactFiberLane"
 import { scheduleSyncCallback,flushSyncCallbacks } from "./ReactFiberSyncTaskQueue";
+import { NoTransition, requestCurrentTransition } from "./ReactFiberTransition";
 import { LegacyRoot } from "./ReactRootTags";
 import { ConcurrentMode, NoMode } from "./ReactTypeOfMode";
 
@@ -29,6 +31,15 @@ let pendingPassiveTransitions = null
 
 let rootDoesHavePassiveEffects = false
 
+
+let currentEventTransitionLane = NoLane
+
+const {
+  ReactCurrentBatchConfig,
+} = ReactSharedInternals;
+
+
+
 export let subtreeRenderLanes = NoLanes
 let pendingPassiveEffectsLanes = NoLanes
 
@@ -42,6 +53,23 @@ export function requestUpdateLane(fiber){
   if( (mode & ConcurrentMode) == NoMode ){
     return SyncLane
   } 
+  const isTransition =  requestCurrentTransition() != NoTransition
+  if (isTransition) {
+    if(ReactCurrentBatchConfig.transition != null){
+      const transition = ReactCurrentBatchConfig.transition;
+      if(!transition._updatedFibers){
+        transition._updatedFibers = new Set();
+      }
+      transition._updatedFibers.add(fiber);
+     
+    }
+    if (currentEventTransitionLane == NoLane) {
+      currentEventTransitionLane = claimNextTransitionLane();
+    }
+    return currentEventTransitionLane;
+  }
+
+
   const updateLane =  getCurrentUpdatePriority()
   if(updateLane != NoLanes){
     return updateLane
@@ -282,8 +310,13 @@ function commitRootImpl(root, renderPriorityLevel){
       })
     }
   }
+  let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
 
-  markRootFinished(root,0)
+  const concurrentlyUpdatedLanes =  getConcurrentlyUpdatedLanes()
+  remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
+  markRootFinished(root,remainingLanes)
+
+  
   commitBeforeMutationEffects(root, finishedWork)
   commitMutationEffects(root, finishedWork, lanes);
   root.current = finishedWork
@@ -299,6 +332,8 @@ function commitRootImpl(root, renderPriorityLevel){
     pendingPassiveEffectsLanes = lanes;
   }
 
+debugger
+  ensureRootIsScheduled(root,now())
   if(includesSomeLane(pendingPassiveEffectsLanes,SyncLane)){
     flushPassiveEffects()
   }

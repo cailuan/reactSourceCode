@@ -11,6 +11,12 @@ export const DefaultLane = /*                    */ 0b00000000000000000000000000
 
 const NonIdleLanes = /*                                 */ 0b0001111111111111111111111111111;
 
+const TransitionLanes = /*                       */ 0b0000000001111111111111111000000;
+const TransitionLane1 = /*                        */ 0b0000000000000000000000001000000;
+
+
+let nextTransitionLane = TransitionLane1;
+
 export function mergeLanes(a, b) {
   return a | b;
 }
@@ -56,7 +62,7 @@ export function getNextLanes(root,lane?:number){
 }
 
 export function markRootFinished(root,remainingLanes){
-  root.pendingLanes = 0;
+  root.pendingLanes = remainingLanes;
 }
 
 export function includesSomeLane(a,b){
@@ -65,4 +71,24 @@ export function includesSomeLane(a,b){
 
 export function removeLanes(set,subset){
   return set & ~subset;
+}
+
+export function claimNextTransitionLane(){
+  const lane = nextTransitionLane;
+
+
+  return lane;
+}
+
+
+export function isSubsetOfLanes(set,subset){
+  return (set & subset) === subset;
+}
+
+export function isTransitionLane(lane){
+  return (lane & TransitionLanes)  != NoLanes
+}
+
+export function intersectLanes(a,b){
+  return a & b;
 }
