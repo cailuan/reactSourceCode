@@ -2,11 +2,13 @@ import { reconcileChildFibers,mountChildFibers, cloneChildFibers } from "./React
 import { pushHostContainer } from "./ReactFiberHostContext";
 import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
-import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
+import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent, MemoComponent, SimpleMemoComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
 import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
 import { prepareToReadContext, pushProvider } from "./ReactFiberNewContext";
+import { createFiberFromElement, createFiberFromTypeAndProps, createWorkInProgress, isSimpleFunctionComponent } from "./ReactFiber";
+import shallowEqual from "../shared/shallowEqual";
 
 let didReceiveUpdate = false
 let hasWarnedAboutUsingNoValuePropOnContextProvider = false
@@ -122,6 +124,7 @@ export function beginWork(current, workInProgress, renderLanes){
           : {} // resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(current,workInProgress,Component,resolvedProps,renderLanes)
     }
+    
      
     case ContextProvider:
       return updateContextProvider(current, workInProgress ,renderLanes)
@@ -140,10 +143,113 @@ export function beginWork(current, workInProgress, renderLanes){
         resolvedProps,
         renderLanes,)
     }
+
+    case MemoComponent:{
+      const type = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      // let resolvedProps = resolveDefaultProps(type, unresolvedProps);
+      if (workInProgress.type != workInProgress.elementType) {
+        const outerPropTypes = type.propTypes;
+
+      }
+
+      return updateMemoComponent(current,workInProgress,type,unresolvedProps,renderLanes)
+    }
       
 
 
   }
+}
+
+function updateMemoComponent(current,workInProgress,Component,nextProps,renderLanes){
+  if (current == null) {
+    const type = Component.type;
+    if(isSimpleFunctionComponent(type) && Component.compare == null && Component.defaultProps == undefined){
+      let resolvedType = type;
+      workInProgress.tag = SimpleMemoComponent
+      workInProgress.type = type
+      return updateSimpleMemoComponent( 
+        current,
+        workInProgress,
+        resolvedType,
+        nextProps,
+        renderLanes,)
+    }
+
+    const child =  createFiberFromTypeAndProps(Component.type,null,nextProps, workInProgress,workInProgress.mode,renderLanes)
+
+    child.ref = workInProgress.ref;
+    child.return = workInProgress;
+    workInProgress.child = child;
+    return child;
+
+
+  }
+
+  const type = Component.type;
+  const innerPropTypes = type.propTypes;
+
+  const currentChild = current.child
+
+
+  const hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(current,renderLanes)
+
+  if (!hasScheduledUpdateOrContext) {
+    const prevProps = currentChild.memoizedProps;
+
+    let compare = Component.compare;
+
+    compare = compare !== null ? compare : shallowEqual;
+    if (compare(prevProps, nextProps) && current.ref === workInProgress.ref) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+    }
+  }
+  workInProgress.flags |= PerformedWork;
+  const newChild = createWorkInProgress(currentChild, nextProps);
+  newChild.ref = workInProgress.ref;
+  newChild.return = workInProgress;
+  workInProgress.child = newChild;
+  return newChild;
+
+
+
+}
+
+function checkScheduledUpdateOrContext(current,renderLanes){
+  const updateLanes = current.lanes;
+  if (includesSomeLane(updateLanes, renderLanes)) {
+    return true;
+  }
+
+  return false;
+}
+
+function updateSimpleMemoComponent(current,workInProgress,Component,nextProps,renderLanes){
+  if(current != null){
+    const prevProps = current.memoizedProps;
+    if(  shallowEqual(prevProps, nextProps) && current.ref == workInProgress.ref){
+      didReceiveUpdate = false;
+      workInProgress.pendingProps = nextProps = prevProps;
+
+      workInProgress.lanes = current.lanes;
+
+      return bailoutOnAlreadyFinishedWork(
+        current,
+        workInProgress,
+        renderLanes,
+      );
+    }
+   
+  
+  }
+
+  return updateFunctionComponent(
+    current,
+    workInProgress,
+    Component,
+    nextProps,
+    renderLanes,
+  );
 }
 
 function mountIndeterminateComponent(_current,workInProgress,Component,renderLanes){

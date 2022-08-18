@@ -1,7 +1,7 @@
 import React from "react";
 // import ReactDOM from "react-dom";
 
-import {createContext , forwardRef} from './myReact/react/react'
+import {createContext , forwardRef, memo} from './myReact/react/react'
 import { createRoot } from "./myReact/react-dom";
 import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext, useImperativeHandle,useTransition} from "./myReact/react";
 // import {createRoot} from "./myReact/react-dom/client/ReactDOMRoot"
@@ -258,8 +258,21 @@ function Transition() {
   );
 }
 
+const Memoroot = ()=>{
+  const [state,setState] = useState('memo')
+  useEffect(()=>{
+    setState('memo effect')
+  },[])
+  return <MemoPage state = {state}/>
+}
 
-createRoot(rootEl).render(<Transition/ >);
+const Page = ({state})=>{
+  console.log('page ======')
+  return <div>{state}</div>
+}
+const MemoPage = memo(Page,()=> true)
+
+createRoot(rootEl).render(<Memoroot/ >);
 
 // ReactDOM.createRoot(rootEl1).render(<div > createRoot</div>);
 

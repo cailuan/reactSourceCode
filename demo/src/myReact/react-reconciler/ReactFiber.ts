@@ -1,8 +1,8 @@
-import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FORWARD_REF_TYPE, REACT_FRAGMENT_TYPE, REACT_PROVIDER_TYPE } from "../shared/ReactSymbols";
+import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FORWARD_REF_TYPE, REACT_FRAGMENT_TYPE, REACT_MEMO_TYPE, REACT_PROVIDER_TYPE } from "../shared/ReactSymbols";
 import { NoFlags } from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import {resolveForwardRefForHotReloading} from './ReactFiberHotReloading'
-import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef } from "./ReactWorkTags"
+import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef, MemoComponent } from "./ReactWorkTags"
 
 export function createHostRootFiber(){
 
@@ -105,6 +105,9 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
               fiberTag = ForwardRef
               resolvedType = resolveForwardRefForHotReloading(resolvedType)
               break getTag;
+            case REACT_MEMO_TYPE:
+              fiberTag = MemoComponent
+              break getTag;
           }
         }
     }
@@ -126,4 +129,12 @@ export function createFiberFromFragment(elements,mode,lanes,key){
 function shouldConstruct(Component){
   const prototype = Component.prototype
   return !!(prototype && prototype.isReactComponent)
+}
+
+export function isSimpleFunctionComponent(type: any) {
+  return (
+    typeof type == 'function' &&
+    !shouldConstruct(type) &&
+    type.defaultProps == undefined
+  );
 }

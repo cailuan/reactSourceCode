@@ -498,7 +498,7 @@ function updateReducer(reducer,initialArg,init?:any){
           eagerState: update.eagerState,
           next:null
         }
-        if (newBaseQueueLast === null) {
+        if (newBaseQueueLast == null) {
           newBaseQueueFirst = newBaseQueueLast = clone;
           newBaseState = newState;
         } else {

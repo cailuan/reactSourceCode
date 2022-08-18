@@ -82,7 +82,7 @@ export function claimNextTransitionLane(){
 
 
 export function isSubsetOfLanes(set,subset){
-  return (set & subset) === subset;
+  return (set & subset) == subset;
 }
 
 export function isTransitionLane(lane){
