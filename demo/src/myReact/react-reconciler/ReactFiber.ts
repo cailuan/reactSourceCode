@@ -2,7 +2,20 @@ import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FORWARD_REF_TYPE, REACT_F
 import { NoFlags } from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import {resolveForwardRefForHotReloading} from './ReactFiberHotReloading'
-import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef, MemoComponent } from "./ReactWorkTags"
+import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef, MemoComponent, HostPortal } from "./ReactWorkTags"
+
+
+export function createFiberFromPortal(portal, mode, lanes){
+  const pendingProps = portal.children !== null ? portal.children : [];
+  const fiber = createFiber(HostPortal, pendingProps, portal.key, mode);
+  fiber.lanes = lanes;
+  fiber.stateNode = {
+    containerInfo: portal.containerInfo,
+    pendingChildren: null, // Used by persistent updates
+    implementation: portal.implementation,
+  };
+  return fiber;
+}
 
 export function createHostRootFiber(){
 

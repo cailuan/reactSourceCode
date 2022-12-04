@@ -1,4 +1,5 @@
 import { COMMENT_NODE } from "../../shared/HTMLNodeType";
+import { listenToAllSupportedEvents } from "../events/DOMPluginEventSystem";
 import { createTextNode,createElement,setInitialProperties, diffProperties, updateProperties } from "./ReactDOMComponent"
 import { precacheFiberNode, updateFiberProps } from "./ReactDOMComponentTree";
 
@@ -82,5 +83,10 @@ export function removeChildFromContainer(
     container.removeChild(child);
   }
 }
+
+export function preparePortalMount(portalInstance) {
+  listenToAllSupportedEvents(portalInstance);
+
+} 
 
 export function getPublicInstance(instance){return instance}

@@ -2,7 +2,7 @@ import { reconcileChildFibers,mountChildFibers, cloneChildFibers } from "./React
 import { pushHostContainer } from "./ReactFiberHostContext";
 import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
-import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent, MemoComponent, SimpleMemoComponent } from "./ReactWorkTags";
+import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, IndeterminateComponent, MemoComponent, SimpleMemoComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
 import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
@@ -15,6 +15,14 @@ let hasWarnedAboutUsingNoValuePropOnContextProvider = false
 
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
+}
+
+function attemptEarlyBailoutIfNoScheduledUpdate(current,workInProgress,renderLanes){
+  // switch(workInProgress.tag){
+  //   case HostRoot:
+
+  // }
+  return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
 }
 
 function bailoutOnAlreadyFinishedWork(current,workInProgress,renderLanes){
@@ -93,7 +101,7 @@ export function beginWork(current, workInProgress, renderLanes){
         case HostRoot:
           break
       }
-      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+      return attemptEarlyBailoutIfNoScheduledUpdate(current, workInProgress, renderLanes)
     }else{
       didReceiveUpdate = false
     }
@@ -124,6 +132,8 @@ export function beginWork(current, workInProgress, renderLanes){
           : {} // resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(current,workInProgress,Component,resolvedProps,renderLanes)
     }
+    case HostPortal:
+      return updatePortalComponent(current, workInProgress, renderLanes);
     
      
     case ContextProvider:
@@ -336,5 +346,17 @@ function updateFunctionComponent(current,workInProgress,Component,nextProps,rend
   workInProgress.flags |= PerformedWork
 
   reconcileChildren(current,workInProgress,nextChildren,renderLanes)
+  return workInProgress.child;
+}
+
+function updatePortalComponent(current, workInProgress, renderLanes){
+  pushHostContainer(workInProgress, workInProgress?.stateNode?.containerInfo)
+  const nextChildren = workInProgress.pendingProps;
+  if(current == null){
+    workInProgress.child =  reconcileChildFibers(workInProgress,null,nextChildren,renderLanes)
+
+  }else{
+    reconcileChildren(current,workInProgress,nextChildren,renderLanes)
+  }
   return workInProgress.child;
 }

@@ -4,7 +4,7 @@ import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, Pas
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { Passive as HookPassive , HasEffect as HookHasEffect,Layout as HookLayout, Insertion as HookInsertion ,NoFlags as NoHookEffect,} from "./ReactHookEffectTags"
 import { ProfileMode } from "./ReactTypeOfMode"
-import { ForwardRef, FunctionComponent, HostComponent, HostRoot, HostText, MemoComponent, SimpleMemoComponent } from "./ReactWorkTags"
+import { ForwardRef, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, MemoComponent, SimpleMemoComponent } from "./ReactWorkTags"
 
 let nextEffect:any = null
 let inProgressLanes = null
@@ -34,6 +34,11 @@ function commitMutationEffectsOnFiber(finishedWork,root,lanes){
 
       }
       break;
+    }
+    case HostPortal:{
+      recursivelyTraverseMutationEffects(root,finishedWork,lanes)
+      commitReconciliationEffects(finishedWork)
+      return;
     }
     case HostComponent:{
       recursivelyTraverseMutationEffects(root, finishedWork, lanes)
@@ -212,6 +217,7 @@ export function commitPlacement(finishedWork){
   let isContainer;
   const parentStateNode = parentFiber.stateNode;
   switch(parentFiber.tag){
+    case HostPortal:
     case HostRoot:{
       parent = parentStateNode.containerInfo;
       const before = getHostSibling(finishedWork);

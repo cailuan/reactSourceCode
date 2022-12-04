@@ -28,5 +28,5 @@ export const DiscreteEventPriority = SyncLane
 
 
 export function higherEventPriority(a,b){
-  return a!= 0 && a < b ? a : b
+  return a != 0 && a < b ? a : b
 }

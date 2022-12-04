@@ -1,10 +1,10 @@
-import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild, prepareUpdate} from "../react-dom/client/ReactDOMHostConfig";
+import { createTextInstance ,createInstance,finalizeInitialChildren, appendInitialChild, prepareUpdate, preparePortalMount} from "../react-dom/client/ReactDOMHostConfig";
 import { Ref, RefStatic, Snapshot, Update } from "./ReactFiberFlags";
 import { getRootHostContainer } from "./ReactFiberHostContext";
 import { mergeLanes, NoLanes } from "./ReactFiberLane";
 import { popProvider } from "./ReactFiberNewContext";
 import { ProfileMode } from "./ReactTypeOfMode";
-import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, MemoComponent, SimpleMemoComponent } from "./ReactWorkTags";
+import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, MemoComponent, SimpleMemoComponent } from "./ReactWorkTags";
 
 function markRef(workInProgress){
   workInProgress.flags |= Ref
@@ -83,6 +83,17 @@ export function completeWork(current,workInProgress,renderLanes){
     
       bubbleProperties(workInProgress)
       break
+    case HostPortal:
+      {
+        if(current == null){
+          
+          preparePortalMount(workInProgress.stateNode.containerInfo)
+          // preparePortalMount
+        }
+        bubbleProperties(workInProgress);
+        
+       return null
+      }
     case HostComponent:
       const rootContainerInstance = getRootHostContainer();
       const type = workInProgress.type;

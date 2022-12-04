@@ -1,4 +1,4 @@
-export { createRoot } from './client/ReactDOM'
+export { createRoot,createPortal } from './client/ReactDOM'
 
  
 

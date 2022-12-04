@@ -1,8 +1,8 @@
 import isArray from "../shared/isArray"
-import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "../shared/ReactSymbols"
-import { createFiberFromText,createFiberFromElement, createWorkInProgress } from "./ReactFiber"
+import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, REACT_PORTAL_TYPE } from "../shared/ReactSymbols"
+import { createFiberFromText,createFiberFromElement, createWorkInProgress, createFiberFromPortal } from "./ReactFiber"
 import { ChildDeletion, Placement } from "./ReactFiberFlags"
-import { HostText } from "./ReactWorkTags";
+import { HostPortal, HostText } from "./ReactWorkTags";
 
 
 function coerceRef(returnFiber,current,element){
@@ -65,6 +65,35 @@ function ChildReconciler(shouldTrackSideEffects){
       return created
     }
   }
+
+  function reconcileSinglePortal(returnFiber,currentFirstChild,portal,lanes){
+    const key = portal.key;
+    let child = currentFirstChild;
+    while(child != null){
+      if(child.key == key){
+        if(child.tag == HostPortal && child.stateNode.containerInfo == portal.containerInfo &&
+          child.stateNode.implementation == portal.implementation ){
+            
+            deleteRemainingChildren(returnFiber, child.sibling);
+            const existing = uFiber(child, portal.children || []);
+            existing.return = returnFiber;
+            return existing;
+        } else {
+          deleteRemainingChildren(returnFiber, child);
+          break;
+        }
+      }else {
+        deleteChild(returnFiber, child);
+      }
+      
+      child = child.sibling;
+    }
+
+    const created = createFiberFromPortal(portal, returnFiber.mode, lanes);
+    created.return = returnFiber;
+    return created;
+  }
+
   function deleteRemainingChildren(returnFiber,currentFirstChild){
     if(!shouldTrackSideEffects){
       return null
@@ -308,6 +337,8 @@ debugger
       switch(newChild.$$typeof){
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(reconcileSingleElement(returnFiber,currentFirstChild,newChild,lanes))
+        case REACT_PORTAL_TYPE:
+          return placeSingleChild(reconcileSinglePortal(returnFiber,currentFirstChild,newChild,lanes))
       }
     }
 

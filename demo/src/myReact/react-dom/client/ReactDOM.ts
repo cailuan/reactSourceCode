@@ -1,3 +1,3 @@
-import {createRoot} from './ReactDOMRoot';
+import {createRoot, createPortal} from './ReactDOMRoot';
 
-export {createRoot}
+export {createRoot ,createPortal}
