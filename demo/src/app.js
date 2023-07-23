@@ -48,5 +48,4 @@ const SuspenseFn = () => {
 };
 
 ReactDOM.createRoot(rootEl).render(<SuspenseFn />);
-
 }
