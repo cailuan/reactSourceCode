@@ -104,3 +104,19 @@ function markUpdateLaneFromFiberToRoot(sourceFiber,update,lane){
     parent = parent.return;
   }
 }
+
+export function enqueueConcurrentRenderForLane(fiber, lane){
+  enqueueUpdate(fiber,null,null,lane)
+  return getRootForUpdatedFiber(fiber);
+}
+
+export function unsafe_markUpdateLaneFromFiberToRoot(sourceFiber,lane){
+
+}
+
+export function enqueueConcurrentClassUpdate(fiber, queue , update , lane){
+  const concurrentQueue = queue;
+  const concurrentUpdate = update;
+  enqueueUpdate(fiber, concurrentQueue, concurrentUpdate, lane)
+  return getRootForUpdatedFiber(fiber)
+}

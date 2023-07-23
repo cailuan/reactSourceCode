@@ -1,8 +1,8 @@
-import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FORWARD_REF_TYPE, REACT_FRAGMENT_TYPE, REACT_MEMO_TYPE, REACT_PROVIDER_TYPE } from "../shared/ReactSymbols";
-import { NoFlags } from "./ReactFiberFlags";
+import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FORWARD_REF_TYPE, REACT_FRAGMENT_TYPE, REACT_LAZY_TYPE, REACT_MEMO_TYPE, REACT_OFFSCREEN_TYPE, REACT_PROVIDER_TYPE, REACT_SUSPENSE_TYPE } from "../shared/ReactSymbols";
+import { NoFlags, StaticMask } from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import {resolveForwardRefForHotReloading} from './ReactFiberHotReloading'
-import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef, MemoComponent, HostPortal } from "./ReactWorkTags"
+import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef, MemoComponent, HostPortal,SuspenseComponent, OffscreenComponent, LazyComponent, ClassComponent, FunctionComponent } from "./ReactWorkTags"
 
 
 export function createFiberFromPortal(portal, mode, lanes){
@@ -37,6 +37,11 @@ function FiberNode(tag,pendingProps,key,mode){
   this.flags = NoFlags
   this.subtreeFlags = NoFlags
   this.childLanes = NoLanes
+
+  this.memoizedProps = null;
+  this.updateQueue = null;
+  this.memoizedState = null;
+  this.dependencies = null;
 }
 
 
@@ -57,7 +62,7 @@ export function createWorkInProgress(current,pendingProps){
     workInProgress.deletions = null;
 
   }
-  workInProgress.flags = current.flags // & StaticMask
+  workInProgress.flags = current.flags & StaticMask // & StaticMask
   workInProgress.childLanes = current.childLanes
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;
@@ -88,6 +93,13 @@ export function createFiberFromElement(element,mode,lanes){
   return fiber
 } 
 
+export function createFiberFromSuspense(pendingProps,mode, lanes,key){
+  const fiber = createFiber(SuspenseComponent, pendingProps, key , mode);
+  fiber.elementType = REACT_SUSPENSE_TYPE;
+  fiber.lanes = lanes;
+  return fiber;
+}
+
 
 export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lanes){
   let fiberTag = IndeterminateComponent
@@ -104,6 +116,8 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
     getTag:switch(type){
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children,mode,lanes,key)
+      case REACT_SUSPENSE_TYPE:
+        return createFiberFromSuspense(pendingProps, mode, lanes, key)
       default :
         if(typeof type== 'object' && type != null){
           switch(type.$$typeof){
@@ -113,14 +127,20 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
             case REACT_CONTEXT_TYPE : 
               fiberTag = ContextConsumer;
               resolvedType = resolveForwardRefForHotReloading(resolvedType)
-              break getTag
+              break getTag;
             case REACT_FORWARD_REF_TYPE:
+            
               fiberTag = ForwardRef
               resolvedType = resolveForwardRefForHotReloading(resolvedType)
               break getTag;
             case REACT_MEMO_TYPE:
               fiberTag = MemoComponent
               break getTag;
+            case REACT_LAZY_TYPE:
+              fiberTag = LazyComponent;
+              resolvedType = null;
+              break getTag;
+            
           }
         }
     }
@@ -150,4 +170,29 @@ export function isSimpleFunctionComponent(type: any) {
     !shouldConstruct(type) &&
     type.defaultProps == undefined
   );
+}
+
+
+export function createFiberFromOffscreen(pendingProps,mode,lanes,key){
+  const fiber = createFiber(OffscreenComponent,pendingProps,key,mode);
+  fiber.elementType = REACT_OFFSCREEN_TYPE;
+  fiber.lanes = lanes;
+  const primaryChildInstance =  {
+    isHidden: false,
+    pendingMarkers: null,
+    retryCache: null,
+    transitions: null,
+  }
+  fiber.stateNode = primaryChildInstance;
+  return fiber;
+}
+
+
+
+export function resolveLazyComponentTag(Component){
+  if(typeof Component == 'function'){
+    return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
+  }
+
+  return IndeterminateComponent;
 }

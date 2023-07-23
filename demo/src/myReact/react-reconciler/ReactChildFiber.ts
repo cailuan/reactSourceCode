@@ -1,8 +1,9 @@
 import isArray from "../shared/isArray"
-import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, REACT_PORTAL_TYPE } from "../shared/ReactSymbols"
+import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, REACT_OFFSCREEN_TYPE, REACT_PORTAL_TYPE } from "../shared/ReactSymbols"
 import { createFiberFromText,createFiberFromElement, createWorkInProgress, createFiberFromPortal } from "./ReactFiber"
-import { ChildDeletion, Placement } from "./ReactFiberFlags"
-import { HostPortal, HostText } from "./ReactWorkTags";
+import { ChildDeletion, NoFlags, Placement } from "./ReactFiberFlags"
+import { NoLanes } from "./ReactFiberLane";
+import { HostPortal, HostText, OffscreenComponent } from "./ReactWorkTags";
 
 
 function coerceRef(returnFiber,current,element){
@@ -368,4 +369,9 @@ export function cloneChildFibers(current,workInProgress){
   }
   newChild.sibling = null;
 }
+
+
+
+
+
 

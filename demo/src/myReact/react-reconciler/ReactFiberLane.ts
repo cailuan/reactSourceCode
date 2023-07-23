@@ -15,7 +15,16 @@ const TransitionLanes = /*                       */ 0b00000000011111111111111110
 const TransitionLane1 = /*                        */ 0b0000000000000000000000001000000;
 
 
+const RetryLanes = /*                             */ 0b0000111110000000000000000000000;
+const RetryLane1 = /*                             */ 0b0000000010000000000000000000000;
+const RetryLane2 = /*                             */ 0b0000000100000000000000000000000;
+const RetryLane3 = /*                             */ 0b0000001000000000000000000000000;
+const RetryLane4 = /*                             */ 0b0000010000000000000000000000000;
+const RetryLane5 = /*                             */ 0b0000100000000000000000000000000;
+
+
 let nextTransitionLane = TransitionLane1;
+let nextRetryLane = RetryLane1;
 
 export function mergeLanes(a, b) {
   return a | b;
@@ -91,4 +100,13 @@ export function isTransitionLane(lane){
 
 export function intersectLanes(a,b){
   return a & b;
+}
+
+export function claimNextRetryLane(){
+  const lane = nextRetryLane;
+  nextRetryLane <<= 1;
+  if ((nextRetryLane & RetryLanes) === NoLanes) {
+    nextRetryLane = RetryLane1;
+  }
+  return lane;
 }

@@ -20,13 +20,13 @@ export function updateContainer(element,container){
   // todo onScheduleRoot  oldOnScheduleFiberRoot apply
   const current = container.current;
   const eventTime = requestEventTime();
-  var lane = requestUpdateLane(current)
+  const lane = requestUpdateLane(current)
   // 当前节点更新到 current.updateQueue.shared.pending.payload.element 上
   var update:any =  createUpdate(eventTime,lane)
   update.payload = {
     element
   }
-  enqueueUpdate(current,update)
+  enqueueUpdate(current,update,lane)
   scheduleUpdateOnFiber(current,lane,eventTime)
 
   

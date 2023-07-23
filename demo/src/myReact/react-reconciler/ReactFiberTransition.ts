@@ -8,3 +8,9 @@ export const NoTransition = null;
 export function requestCurrentTransition() {
   return ReactCurrentBatchConfig.transition;
 }
+
+export function getSuspendedCache(){
+  return {
+
+  }
+}

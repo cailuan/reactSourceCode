@@ -7,3 +7,8 @@ export const REACT_PORTAL_TYPE = symbolFor('react.portal')
 export const REACT_PROVIDER_TYPE = symbolFor('react.provider');
 
 export const REACT_FORWARD_REF_TYPE = symbolFor('react.forward_ref')
+
+export const REACT_SUSPENSE_TYPE = symbolFor('react.suspense')
+export const REACT_LAZY_TYPE = symbolFor('react.lazy');
+
+export const REACT_OFFSCREEN_TYPE = symbolFor('react.offscreen')

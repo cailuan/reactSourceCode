@@ -1,5 +1,6 @@
+import { unsafe_markUpdateLaneFromFiberToRoot,enqueueConcurrentClassUpdate } from "./ReactFiberConcurrentUpdates";
 import { NoLanes } from "./ReactFiberLane";
-
+import { isUnsafeClassRenderPhaseUpdate } from "./ReactFiberWorkLoop";
 
 
 export const UpdateState = 0;
@@ -7,23 +8,23 @@ export const ReplaceState = 1;
 export const ForceUpdate = 2;
 export const CaptureUpdate = 3;
 
-export function initializeUpdateQueue(fiber){
+export function initializeUpdateQueue(fiber) {
   const quene = {
-    baseState:fiber.memoizedState,
-    firstBaseUpdate : null,
+    baseState: fiber.memoizedState,
+    firstBaseUpdate: null,
     lastBaseUpdate: null,
-    shared:{
-      pending:null,
+    shared: {
+      pending: null,
       lanes: NoLanes
-      
+
     },
-    effects:null
+    effects: null
   }
   fiber.updateQueue = quene
 }
 
 
-export function createUpdate(eventTime,lane){
+export function createUpdate(eventTime, lane) {
   const update = {
     eventTime,
     lane,
@@ -37,27 +38,41 @@ export function createUpdate(eventTime,lane){
   return update;
 }
 
-export function enqueueUpdate(fiber,update){
-  const updateQueue = fiber.updateQueue
+export function enqueueUpdate(fiber, update, lane) {
+
+  const updateQueue = fiber.updateQueue;
+  if (updateQueue === null) {
+    return null;
+  }
+
   const sharedQueue = updateQueue.shared
 
-  const pending = sharedQueue.pending;
-  if(pending == null){
-    update.next = update
+  if (isUnsafeClassRenderPhaseUpdate(fiber)) {
+    const pending = sharedQueue.pending;
+    if (pending == null) {
+      update.next = update
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update
+    return unsafe_markUpdateLaneFromFiberToRoot(fiber, lane)
+    // unsafe_markUpdateLaneFromFiberToRoot(fiber, lane);
+  }else{
+    return enqueueConcurrentClassUpdate(fiber, sharedQueue, update, lane);
   }
 
 
-  sharedQueue.pending = update
 
 }
 
-export function cloneUpdateQueue(current,workInProgress){
+export function cloneUpdateQueue(current, workInProgress) {
   const quene = workInProgress.updateQueue
   const currentQueue = current.updateQueue
-  if(quene == currentQueue){
+  if (quene == currentQueue) {
     const clone = {
-      baseState : currentQueue.baseState,
-      firstBaseUpdate : currentQueue.firstBaseUpdate,
+      baseState: currentQueue.baseState,
+      firstBaseUpdate: currentQueue.firstBaseUpdate,
       lastBaseUpdate: currentQueue.lastBaseUpdate,
       shared: currentQueue.shared,
       effects: currentQueue.effects
@@ -66,31 +81,31 @@ export function cloneUpdateQueue(current,workInProgress){
   }
 }
 
-export function processUpdateQueue(workInProgress,props,instance,renderLanes){
+export function processUpdateQueue(workInProgress, props, instance, renderLanes) {
   const queue = workInProgress.updateQueue
   let firstBaseUpdate = queue.firstBaseUpdate;
   let lastBaseUpdate = queue.lastBaseUpdate;
   let pendingQueue = queue.shared.pending;
-  if(pendingQueue != null){
+  if (pendingQueue != null) {
     queue.shared.pending = null;
-    const lastPendingUpdate =  pendingQueue
-    const firstPendingUpdate =  pendingQueue.next
+    const lastPendingUpdate = pendingQueue
+    const firstPendingUpdate = pendingQueue.next
     lastPendingUpdate.next = null
-    if(lastBaseUpdate == null){
+    if (lastBaseUpdate == null) {
       firstBaseUpdate = firstPendingUpdate;
-    }else {
+    } else {
       lastBaseUpdate.next = firstPendingUpdate
     }
     lastBaseUpdate = lastPendingUpdate;
 
     const current = workInProgress.alternate;
-    if(current != null){
+    if (current != null) {
       const currentQueue = current.updateQueue
       const currentLastBaseUpdate = currentQueue.lastBaseUpdate
-      if(currentLastBaseUpdate != lastBaseUpdate){
-        if(currentLastBaseUpdate == null){
+      if (currentLastBaseUpdate != lastBaseUpdate) {
+        if (currentLastBaseUpdate == null) {
           currentQueue.firstBaseUpdate = firstPendingUpdate
-        }else{
+        } else {
           currentLastBaseUpdate.next = firstPendingUpdate
         }
         currentQueue.lastBaseUpdate = lastPendingUpdate
@@ -98,22 +113,22 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
     }
   }
 
-  if(firstBaseUpdate != null){
+  if (firstBaseUpdate != null) {
     let newLastBaseUpdate = null;
     let newBaseState = null
     let update = firstBaseUpdate
     let newState = queue.baseState
     let newFirstBaseUpdate = null
-    do{
-      
-      newState =  getStateFromUpdate(workInProgress,queue,update,newState,props,instance)
+    do {
+
+      newState = getStateFromUpdate(workInProgress, queue, update, newState, props, instance)
       let callback = update.callback
       update = update.next
-      if(update == null){
+      if (update == null) {
         pendingQueue = queue.shared.pending;
-        if(pendingQueue == null){
+        if (pendingQueue == null) {
           break
-        }else{
+        } else {
           let lastPendingUpdate = pendingQueue
           const firstPendingUpdate = lastPendingUpdate.next
           lastPendingUpdate.next = null;
@@ -122,9 +137,9 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
           queue.shared.pending = null;
         }
       }
-    }while(true)
+    } while (true)
 
-    if(newLastBaseUpdate == null){
+    if (newLastBaseUpdate == null) {
       newBaseState = newState
     }
 
@@ -137,16 +152,16 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
   }
 
 
-  
-  
+
+
 
 }
 
-function getStateFromUpdate(workInProgress,queue,update,prevState,nextProps,instance){
-  switch(update.tag){
+function getStateFromUpdate(workInProgress, queue, update, prevState, nextProps, instance) {
+  switch (update.tag) {
     case UpdateState:
       const _payload = update.payload
       let partialState = _payload
-      return Object.assign({},prevState,partialState)
+      return Object.assign({}, prevState, partialState)
   }
 }

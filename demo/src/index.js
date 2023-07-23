@@ -1,26 +1,12 @@
-import React , {useState} from "react";
-import ReactDOM from "react-dom";
-// import { useState } from "./myReact/react";
-// import * as ReactDOM from "./myReact/react-dom";
+import { myReact } from "./myreact";
+import { originReact } from "./app";
 
-const rootEl = document.getElementById("root");
+if(process.env.REACT_APP_NOT_SECRET_CODE == 'ORIGIN') {
+  document.title = '源码'
+  originReact()
+ 
+}else{
+  document.title = 'myself'
+  myReact()
 
-
-debugger
-const ProtalRoot = () => {
-  const [rootState,setRootState] =  useState('root1')
-  return ReactDOM.createPortal(<div onClick={()=>{
-    console.log('root1')
-    setRootState('root click')
-  }}>{rootState}</div>, document.body);
-};
-
-const Protal = () => {
-  return (
-    <div>
-      <ProtalRoot />
-    </div>
-  );
-};
-
-ReactDOM.createRoot(rootEl).render(<Protal />);
+} 
