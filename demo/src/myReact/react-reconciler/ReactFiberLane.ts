@@ -84,7 +84,10 @@ export function removeLanes(set,subset){
 
 export function claimNextTransitionLane(){
   const lane = nextTransitionLane;
-
+  nextTransitionLane <<= 1;
+  if ((nextTransitionLane & TransitionLanes) === NoLanes) {
+    nextTransitionLane = TransitionLane1;
+  }
 
   return lane;
 }
@@ -109,4 +112,9 @@ export function claimNextRetryLane(){
     nextRetryLane = RetryLane1;
   }
   return lane;
+}
+
+export function includesOnlyNonUrgentLanes(lanes){
+  const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
+  return (lanes & UrgentLanes) === NoLanes;
 }

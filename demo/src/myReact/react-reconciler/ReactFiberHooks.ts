@@ -4,7 +4,7 @@ import { getCurrentUpdatePriority, setCurrentUpdatePriority ,ContinuousEventPrio
 import { markWorkInProgressReceivedUpdate } from "./ReactFiberBeginWork";
 import { enqueueConcurrentHookUpdate } from "./ReactFiberConcurrentUpdates";
 import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect, Update} from "./ReactFiberFlags";
-import { NoLanes ,removeLanes,isSubsetOfLanes, NoLane ,isTransitionLane ,intersectLanes, mergeLanes} from "./ReactFiberLane";
+import { NoLanes ,removeLanes,isSubsetOfLanes, NoLane ,isTransitionLane ,intersectLanes, mergeLanes, includesOnlyNonUrgentLanes, claimNextTransitionLane} from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags";
@@ -108,6 +108,11 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useTransition';
     mountHookTypesDev();
     return mountTransition()
+  },
+  useDeferredValue: (value)=>{
+    currentHookNameInDev = 'useDeferredValue';
+    mountHookTypesDev();
+    return mountDeferredValue(value);
   }
 }
 
@@ -181,6 +186,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useTransition';
     updateHookTypesDev()
     return updateTransition()
+  },
+  useDeferredValue: (value)=>{
+    currentHookNameInDev = 'useDeferredValue';
+    updateHookTypesDev()
+    return updateDeferredValue(value)
   }
   
 }
@@ -802,4 +812,36 @@ export function bailoutHooks(current,workInProgress,lanes){
     workInProgress.flags &= ~(UpdateEffect | PassiveEffect)
   }
   current.lanes = removeLanes(current.lanes, lanes)
+}
+
+function mountDeferredValue(value){
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = value;
+  return value
+}
+
+function updateDeferredValue(value){
+  const hook = updateWorkInProgressHook();
+  const resolvedCurrentHook = currentHook;
+  const prevValue = resolvedCurrentHook.memoizedState;
+  return updateDeferredValueImpl(hook, prevValue, value);
+}
+
+function updateDeferredValueImpl(hook,prevValue ,value){
+  const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
+  if(shouldDeferValue){
+    if(!Object.is(value,prevValue)){
+      const deferredLane = claimNextTransitionLane();
+      currentlyRenderingFiber.lanes = mergeLanes(currentlyRenderingFiber.lanes , deferredLane);
+      hook.baseState = true
+    }
+    return prevValue;
+  }else {
+    if(hook.baseState){
+      hook.baseState = false;
+      markWorkInProgressReceivedUpdate();
+    }
+    hook.memoizedState = value;
+    return value
+  }
 }

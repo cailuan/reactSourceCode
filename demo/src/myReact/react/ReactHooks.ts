@@ -56,3 +56,8 @@ export function useTransition(){
   const dispatcher = resolveDispatcher();
   return dispatcher.useTransition();
 }
+
+export function useDeferredValue(value){
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useDeferredValue(value)
+}
