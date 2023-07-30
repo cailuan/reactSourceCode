@@ -146,6 +146,7 @@ function flushPassiveEffectsImpl() {
 }
 
 export function scheduleUpdateOnFiber(fiber, lane, eventTime) {
+  // todo 重写 这个方法
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   markRootUpdated(root, lane, eventTime);
 
@@ -202,6 +203,9 @@ function ensureRootIsScheduled(root, currentTime) {
       scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
     }
     scheduleMicrotask(flushSyncCallbacks);
+
+
+    
     newCallbackNode = null;
   } else {
     switch (lanesToEventPriority(nextLanes)) {
@@ -522,5 +526,9 @@ function requestRetryLane(fiber){
 
 export function isUnsafeClassRenderPhaseUpdate(fiber){
   return (fiber.mode & ConcurrentMode) == NoMode  && (executionContext & RenderContext) !== NoContext
+}
+
+export function getWorkInProgressRoot(){
+  return workInProgressRoot;
 }
 

@@ -1,6 +1,6 @@
 // import React, { useState, useInsertionEffect } from "react";
 // import ReactDOM from "react-dom";
-import  React ,{ useState, createContext,useContext, useEffect,useDeferredValue } from "./myReact/react";
+import  React ,{ useState, createContext,useContext, useEffect,useDeferredValue ,useSyncExternalStore} from "./myReact/react";
 import * as ReactDOM from "./myReact/react-dom";
 
 const ThemeContext = React.createContext({})
@@ -72,7 +72,27 @@ export function myReact(){
           <div>{deferredQuery}</div>
       </div>
     }
+
+    const ChatIndicator = ()=>{
+      const isOnline = useSyncExternalStore(subscribe, getSnapshot);
+      return <h1>{isOnline ? '✅ Online' : '❌ Disconnected'}</h1>;
+    }
     
-    ReactDOM.createRoot(rootEl).render(<DeferredValue />);
+    function getSnapshot() {
+      debugger
+      return navigator.onLine;
+    }
+    
+    function subscribe(callback) {
+      debugger
+      window.addEventListener('online', callback);
+      window.addEventListener('offline', callback);
+      return () => {
+        window.removeEventListener('online', callback);
+        window.removeEventListener('offline', callback);
+      };
+    }
+    
+    ReactDOM.createRoot(rootEl).render(<ChatIndicator />);
 }
 

@@ -1,7 +1,7 @@
 export {
     useState,
     useRef, useEffect, useMemo, useCallback, useReducer, useLayoutEffect, useContext, useImperativeHandle, useTransition, 
-    useDeferredValue
+    useDeferredValue, useSyncExternalStore
 } from './ReactHooks'
 
 export {

@@ -61,3 +61,8 @@ export function useDeferredValue(value){
   const dispatcher = resolveDispatcher();
   return dispatcher.useDeferredValue(value)
 }
+
+export function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot){
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+}
