@@ -5,7 +5,7 @@ import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update 
 import { NoLanes ,removeLanes } from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
-import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout, } from "./ReactHookEffectTags";
+import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout,  Insertion as HookInsertion,} from "./ReactHookEffectTags";
 import { NoMode, StrictEffectsMode } from "./ReactTypeOfMode";
 const {ReactCurrentDispatcher} = ReactSharedInternals
 
@@ -99,6 +99,11 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useImperativeHandle'
     mountHookTypesDev();
     return mountImperativeHandle(ref,create,deps)
+  },
+  useInsertionEffect:(create, deps)=>{
+    currentHookNameInDev = 'useInsertionEffect';
+    mountHookTypesDev();
+    return mountInsertionEffect(create, deps);
   }
 }
 
@@ -167,6 +172,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useImperativeHandle';
     updateHookTypesDev();
     return updateImperativeHandle(ref, create, deps)
+  },
+  useInsertionEffect:(create,deps)=>{
+    currentHookNameInDev = 'useInsertionEffect';
+    updateHookTypesDev();
+    return updateInsertionEffect(create, deps);
   }
   
 }
@@ -202,12 +212,12 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
 }
 
 function updateImperativeHandle(ref,create,deps){
-  const effectDeps = deps !== null && deps !== undefined ? deps.concat([ref]) : null;
+  const effectDeps = deps != null && deps !== undefined ? deps.concat([ref]) : null;
   return updateEffectImpl(UpdateEffect,HookLayout,imperativeHandleEffect.bind(null,create,ref),effectDeps)
 }
 
 function mountImperativeHandle(ref,create,deps){
-  const effectDeps = deps !== null && deps != undefined ? deps.concat([ref]) : null
+  const effectDeps = deps != null && deps != undefined ? deps.concat([ref]) : null
   let fiberFlags = UpdateEffect
   fiberFlags |= LayoutStaticEffect
 
@@ -215,6 +225,15 @@ function mountImperativeHandle(ref,create,deps){
     fiberFlags |= MountLayoutDevEffect
   }
   return mountEffectImpl(fiberFlags,HookLayout,imperativeHandleEffect.bind(null, create, ref),effectDeps)
+}
+
+function mountInsertionEffect(create,deps){
+  return mountEffectImpl(UpdateEffect,HookInsertion,create,deps )
+}
+
+function updateInsertionEffect(create,deps){
+
+  return updateEffectImpl(UpdateEffect,HookInsertion, create,deps)
 }
 
 function imperativeHandleEffect(create,ref){
@@ -226,7 +245,7 @@ function imperativeHandleEffect(create,ref){
       refCallback(null);
     };
 
-  }else if(ref !== null && ref !== undefined){
+  }else if(ref != null && ref !== undefined){
     const refObject = ref;
     const inst = create();
     refObject.current = inst;

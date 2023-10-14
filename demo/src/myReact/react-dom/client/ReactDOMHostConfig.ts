@@ -1,5 +1,7 @@
+import { COMMENT_NODE } from "../../shared/HTMLNodeType";
 import { createTextNode,createElement,setInitialProperties, diffProperties, updateProperties } from "./ReactDOMComponent"
 import { precacheFiberNode, updateFiberProps } from "./ReactDOMComponentTree";
+import setTextContent from "./setTextContent";
 
 export function createTextInstance(text,rootContainerInstance,hostContext,internalInstanceHandle){
   const textNode = createTextNode(text,rootContainerInstance)
@@ -66,5 +68,18 @@ export function appendChild(parentInstance,child){
   }catch(e){
     console.log(e,'===')
   }
+  
+}
+
+export function removeChildFromContainer(container,child){
+  if(container.nodeType == COMMENT_NODE){
+    container.parentNode.removeChild(child)
+  }else{
+    container.removeChild(child);
+  }
+}
+
+export function resetTextContent(domElement) {
+  setTextContent(domElement, '');
   
 }
