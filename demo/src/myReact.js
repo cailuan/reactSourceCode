@@ -286,8 +286,16 @@ function RootDom1 (){
     return <div>111</div>
 }
 
+function RootY(){
+    const [state,setState] = useState(true)
+    return <div>
+        {state && <div>2222</div>}
+        <div onClick={()=>{setState(false)}}>1111</div>
+    </div>
+}
+
 export default function(){
     document.title = "my react"
-    createRoot(rootEl).render(<Host/ >);
+    createRoot(rootEl).render(<RootY/ >);
 
 }

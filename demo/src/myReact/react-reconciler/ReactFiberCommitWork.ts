@@ -232,6 +232,16 @@ function commitDeletionEffectsOnFiber(finishedRoot,nearestMountedAncestor, delet
       );
       return;
     }
+    // @ts-ignore
+    case HostComponent: {
+      if(!offscreenSubtreeWasHidden){
+        safelyDetachRef(deletedFiber, nearestMountedAncestor)
+      };
+      
+    }
+    // falls through
+    // @ts-ignore
+     // eslint-disable-next-line-no-fallthrough
     case HostText:{
       const prevHostParent = hostParent;
       const prevHostParentIsContainer = hostParentIsContainer;
@@ -254,17 +264,7 @@ function commitDeletionEffectsOnFiber(finishedRoot,nearestMountedAncestor, delet
       }
       return;
     }
-    case HostComponent: {
-      if(!offscreenSubtreeWasHidden){
-        safelyDetachRef(deletedFiber, nearestMountedAncestor)
-      };
-      recursivelyTraverseDeletionEffects(
-        finishedRoot,
-        nearestMountedAncestor,
-        deletedFiber,
-      );
-      return;
-    }
+    
     default: {
       recursivelyTraverseDeletionEffects(
         finishedRoot,

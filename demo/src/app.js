@@ -67,8 +67,16 @@ const Host = ()=>{
     return <div>222</div>
 }
 
+function RootY(){
+    const [state,setState] = useState(true)
+    return <div>
+        {state && <div>2222</div>}
+        <div onClick={()=>{setState(false)}}>1111</div>
+    </div>
+}
+
 export default function(){
     document.title = "origin react"
     debugger
-    createRoot(rootEl).render(<Host/ >);
+    createRoot(rootEl).render(<RootY/ >);
 }
