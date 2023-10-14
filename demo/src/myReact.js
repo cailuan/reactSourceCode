@@ -13,12 +13,11 @@ const rootEl1 = document.getElementById("root1");
 
 // ReactDOM.createRoot(rootEl).render('1222');
 
-console.log(process.env.REACT_APP_ENV,'==========--')
 
 
 const Host = ()=>{
   debugger
-  const [initState,setInitState] = useState(1)
+  const [initState,setInitState] = useState(11)
   const hookRef = useRef(null)
   return <div id="text"
   ref={hookRef}
@@ -278,15 +277,17 @@ function useCSS(rule) {
   return rule;
 }
 
+function RootDom1 (){
+    useLayoutEffect(()=>{
+        console.log('useLayoutEffect')
+    },[])
+    const ruleText = 'body { background-color: lightblue; color: darkblue; }';
+    useCSS(ruleText);
+    return <div>111</div>
+}
+
 export default function(){
-    function RootDom (){
-        useLayoutEffect(()=>{
-            console.log('useLayoutEffect')
-        },[])
-        const ruleText = 'body { background-color: lightblue; color: darkblue; }';
-        useCSS(ruleText);
-        return <div>111</div>
-    }
-    createRoot(rootEl).render(<RootDom/ >);
+    document.title = "my react"
+    createRoot(rootEl).render(<Host/ >);
 
 }

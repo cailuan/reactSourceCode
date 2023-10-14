@@ -1,4 +1,4 @@
-import React ,{useInsertionEffect,useLayoutEffect} from "react";
+import React ,{useInsertionEffect,useLayoutEffect,useState,useRef} from "react";
 import {createRoot} from "react-dom";
 
 const rootEl = document.getElementById("root");
@@ -41,17 +41,34 @@ function useCSS(rule) {
   return rule;
 }
 
-export default function(){
-    function RootDom (){
-        useLayoutEffect(()=>{
-            console.log('useLayoutEffect')
-        },[])
-        const ruleText = 'body { background-color: lightblue; color: darkblue; }';
-        useCSS(ruleText);
-
-    
-        return <div>222</div>
-    }
+const Host = ()=>{
     debugger
-    createRoot(rootEl).render(<RootDom/ >);
+    const [initState,setInitState] = useState(11)
+    const hookRef = useRef(null)
+    return <div id="text"
+    ref={hookRef}
+    onClick={()=>{
+    debugger
+      setInitState(1 + initState);
+      setInitState(2+initState)
+      setTimeout(()=>{
+        setInitState(5+initState)
+      },2)
+      console.log('host')}}>{initState}</div>
+  }
+  function RootDom (){
+    useLayoutEffect(()=>{
+        console.log('useLayoutEffect')
+    },[])
+    const ruleText = 'body { background-color: lightblue; color: darkblue; }';
+    useCSS(ruleText);
+
+
+    return <div>222</div>
+}
+
+export default function(){
+    document.title = "origin react"
+    debugger
+    createRoot(rootEl).render(<Host/ >);
 }

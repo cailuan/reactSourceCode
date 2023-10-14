@@ -5,7 +5,7 @@ import { Passive as HookPassive , Layout as HookLayout,NoFlags as NoHookEffect, 
   HasEffect as HookHasEffect,
   Layout,
   HasEffect, } from "./ReactHookEffectTags"
-import { ProfileMode } from "./ReactTypeOfMode"
+import { ConcurrentMode, ProfileMode } from "./ReactTypeOfMode"
 import { ForwardRef, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, MemoComponent } from "./ReactWorkTags"
 
 let nextEffect:any = null
@@ -71,6 +71,57 @@ function commitMutationEffectsOnFiber(finishedWork,root,lanes){
         }
       }
       return ;
+    }
+    case HostComponent:{
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+      
+      if(flags & Ref){
+        if (current != null) {
+          safelyDetachRef(current, current.return);
+        }
+      }
+      if(finishedWork.flags & ContentReset){
+        const instance = finishedWork.stateNode;
+          try {
+            resetTextContent(instance);
+          } catch (error) {
+            // captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
+      }
+
+      if(flags & Update){
+        const instance = finishedWork.stateNode;
+        if (instance != null) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps =
+              current != null ? current.memoizedProps : newProps;
+          const type = finishedWork.type;
+          const updatePayload = (finishedWork.updateQueue);
+          finishedWork.updateQueue = null;
+
+          if (updatePayload != null) {
+            try {
+              commitUpdate(
+                instance,
+                updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork,
+              );
+            } catch (error) {
+              // captureCommitPhaseError(
+              //   finishedWork,
+              //   finishedWork.return,
+              //   error,
+              // );
+            }
+          }
+
+        }
+      }
+      return;
     }
   }
 }
