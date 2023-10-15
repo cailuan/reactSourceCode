@@ -196,14 +196,14 @@ function commitDeletionEffectsOnFiber(finishedRoot,nearestMountedAncestor, delet
           let effect = firstEffect;
           do{
             const {destroy, tag} = effect;
-            if (destroy !== undefined) {
-              if ((tag & HookInsertion ) !== NoHookEffect ) {
+            if (destroy != undefined) {
+              if ((tag & HookInsertion ) != NoHookEffect ) {
                 safelyCallDestroy(
                   deletedFiber,
                   nearestMountedAncestor,
                   destroy,
                 );
-              }else if((tag & HookLayout) !== NoHookEffect){
+              }else if((tag & HookLayout) != NoHookEffect){
                 if(deletedFiber.mode & ProfileMode){
                   safelyCallDestroy(
                     deletedFiber,
@@ -222,7 +222,7 @@ function commitDeletionEffectsOnFiber(finishedRoot,nearestMountedAncestor, delet
 
             }
             effect = effect.next;
-          }while(effect !== firstEffect)
+          }while(effect != firstEffect)
         }
       }
       recursivelyTraverseDeletionEffects(

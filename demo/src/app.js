@@ -68,10 +68,15 @@ const Host = ()=>{
 }
 
 function RootY(){
-    const [state,setState] = useState(true)
-    return <div>
-        {state && <div>2222</div>}
-        <div onClick={()=>{setState(false)}}>1111</div>
+    const [state,setState] = useState([1,2])
+    return <div onClick={()=>{
+        setState([3])
+        }}>
+        {
+            state.map(item=>{
+                return <div>{item}</div>
+            })
+        }
     </div>
 }
 

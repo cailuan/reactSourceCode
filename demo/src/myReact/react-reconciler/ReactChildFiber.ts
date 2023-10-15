@@ -46,7 +46,7 @@ function ChildReconciler(shouldTrackSideEffects){
 
         }else{
           if(child.elementType == elementType){
-  
+            deleteRemainingChildren(returnFiber, child.sibling);
             const existing = uFiber(child, element.props)
             existing.ref =  coerceRef(returnFiber,child,element)
             existing.return = returnFiber;
@@ -71,7 +71,8 @@ function ChildReconciler(shouldTrackSideEffects){
     }
     let childToDelete = currentFirstChild;
     while(childToDelete != null){
-
+      deleteChild(returnFiber, childToDelete);
+      childToDelete = childToDelete.sibling;
     }
     return null
 

@@ -286,11 +286,15 @@ function RootDom1 (){
     return <div>111</div>
 }
 
+
 function RootY(){
-    const [state,setState] = useState(true)
-    return <div>
-        {state && <div>2222</div>}
-        <div onClick={()=>{setState(false)}}>1111</div>
+    const [state,setState] = useState([1,2])
+    return <div onClick={()=>{debugger; setState([3])}}>
+        {
+            state.map((item,index)=>{
+                return <div key={index}>{item}</div>
+            })
+        }
     </div>
 }
 

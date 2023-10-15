@@ -212,7 +212,7 @@ const InvalidNestedHooksDispatcherOnMountInDEV = {
 }
 
 function updateImperativeHandle(ref,create,deps){
-  const effectDeps = deps != null && deps !== undefined ? deps.concat([ref]) : null;
+  const effectDeps = deps != null && deps != undefined ? deps.concat([ref]) : null;
   return updateEffectImpl(UpdateEffect,HookLayout,imperativeHandleEffect.bind(null,create,ref),effectDeps)
 }
 
@@ -245,7 +245,7 @@ function imperativeHandleEffect(create,ref){
       refCallback(null);
     };
 
-  }else if(ref != null && ref !== undefined){
+  }else if(ref != null && ref != undefined){
     const refObject = ref;
     const inst = create();
     refObject.current = inst;
