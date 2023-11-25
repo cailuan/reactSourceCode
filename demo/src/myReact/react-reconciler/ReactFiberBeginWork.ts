@@ -4,10 +4,10 @@ import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
 import { ClassComponent, ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
-import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
+import { PerformedWork, Placement, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
 import { prepareToReadContext, pushProvider } from "./ReactFiberNewContext";
-import {constructClassInstance, mountClassInstance} from "./ReactFiberClassComponent"
+import {constructClassInstance, mountClassInstance, resumeMountClassInstance, updateClassInstance} from "./ReactFiberClassComponent"
 
 let didReceiveUpdate = false
 let hasWarnedAboutUsingNoValuePropOnContextProvider = false
@@ -145,7 +145,7 @@ export function beginWork(current, workInProgress, renderLanes){
       const type = workInProgress.type
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
-        workInProgress.elementType === type
+        workInProgress.elementType == type
           ? unresolvedProps
           : {} //resolveDefaultProps(type, unresolvedProps)
       return updateForwardRef(
@@ -178,11 +178,40 @@ function updateClassComponent(
 
   let shouldUpdate;
   if(instance == null){
+
+    if (current != null) {
+      // A class component without an instance only mounts if it suspended
+      // inside a non-concurrent tree, in an inconsistent state. We want to
+      // treat it like a new mount, even though an empty version of it already
+      // committed. Disconnect the alternate pointers.
+      current.alternate = null;
+      workInProgress.alternate = null;
+      // Since this is conceptually a new fiber, schedule a Placement effect
+      workInProgress.flags |= Placement;
+    }
     constructClassInstance(workInProgress, Component, nextProps);
     mountClassInstance(workInProgress, Component, nextProps, renderLanes);
     
 
-  }  
+  }  else if(current == null){
+    shouldUpdate = resumeMountClassInstance(
+      workInProgress,
+      Component,
+      nextProps,
+      renderLanes,
+    );
+    
+  }else {
+    debugger
+    shouldUpdate = updateClassInstance(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      renderLanes,
+    );
+    
+  }
 
   const nextUnitOfWork = finishClassComponent(
     current,

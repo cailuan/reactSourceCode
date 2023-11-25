@@ -20,7 +20,7 @@ export function get(key) {
 }
 
 export function has(key) {
-  return key._reactInternals !== undefined;
+  return key._reactInternals != undefined;
 }
 
 export function set(key, value) {

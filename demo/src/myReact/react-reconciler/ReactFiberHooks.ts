@@ -237,7 +237,7 @@ function updateInsertionEffect(create,deps){
 }
 
 function imperativeHandleEffect(create,ref){
-  if(typeof ref === 'function'){
+  if(typeof ref == 'function'){
     const refCallback = ref;
     const inst = create();
     refCallback(inst);

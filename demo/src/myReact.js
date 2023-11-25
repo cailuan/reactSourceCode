@@ -303,8 +303,14 @@ class AppComponent extends Component {
   // componentWillUnmount(){
   //   console.log("ChildComponent componentWillUnmount")
   // }
+  state = {
+    age : 40
+  }
   render (){
-    return <div>AppComponent</div>
+    return <div onClick={()=>{
+      debugger
+      this.setState({age : 90})
+    }}>{this.state.age }</div>
   }
 }
 

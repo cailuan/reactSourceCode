@@ -66,7 +66,7 @@ export function appendChild(parentInstance,child){
     debugger
     parentInstance.appendChild(child);
   }catch(e){
-    console.log(e,'===')
+    console.log(e,'==')
   }
   
 }

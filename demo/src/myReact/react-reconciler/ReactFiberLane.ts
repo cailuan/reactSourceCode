@@ -8,6 +8,7 @@ export const InputContinuousLane = /*            */ 0b00000000000000000000000000
 
 export const DefaultHydrationLane = /*            */ 0b0000000000000000000000000001000;
 export const DefaultLane = /*                    */ 0b0000000000000000000000000010000;
+const TransitionLanes = /*                       */ 0b0000000001111111111111111000000;
 
 const NonIdleLanes = /*                                 */ 0b0001111111111111111111111111111;
 
@@ -65,4 +66,8 @@ export function includesSomeLane(a,b){
 
 export function removeLanes(set,subset){
   return set & ~subset;
+}
+
+export function isTransitionLane(lane) {
+  return (lane & TransitionLanes) != NoLanes;
 }

@@ -1,4 +1,6 @@
+import { enqueueConcurrentClassUpdate } from "./ReactFiberConcurrentUpdates";
 import { NoLanes } from "./ReactFiberLane";
+import { isUnsafeClassRenderPhaseUpdate } from "./ReactFiberWorkLoop";
 
 
 
@@ -37,17 +39,29 @@ export function createUpdate(eventTime,lane){
   return update;
 }
 
-export function enqueueUpdate(fiber,update){
-  const updateQueue = fiber.updateQueue
+export function enqueueUpdate(fiber,update,lane ?: any){
+  const updateQueue = fiber.updateQueue;
+  if(updateQueue == null) return null;
   const sharedQueue = updateQueue.shared
 
-  const pending = sharedQueue.pending;
-  if(pending == null){
-    update.next = update
-  }
+  // if(isUnsafeClassRenderPhaseUpdate(fiber)){
+   
 
-
-  sharedQueue.pending = update
+    const pending = sharedQueue.pending;
+    if(pending == null){
+      update.next = update
+    }
+  
+  
+    sharedQueue.pending = update
+  // }else {
+    
+  //   return enqueueConcurrentClassUpdate(fiber, sharedQueue, update, lane);
+    
+    
+  // }
+  
+ 
 
 }
 
@@ -106,6 +120,9 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
     let newFirstBaseUpdate = null
     do{
       
+      const updateLane = update.lane;
+      const updateEventTime = update.eventTime;
+
       newState =  getStateFromUpdate(workInProgress,queue,update,newState,props,instance)
       let callback = update.callback
       update = update.next
@@ -147,6 +164,7 @@ function getStateFromUpdate(workInProgress,queue,update,prevState,nextProps,inst
     case UpdateState:
       const _payload = update.payload
       let partialState = _payload
-      return Object.assign({},prevState,partialState)
+      return Object.assign({},prevState,partialState);
+    
   }
 }

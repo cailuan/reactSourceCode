@@ -85,30 +85,33 @@ class AppComponent extends React.Component {
     age: 42,
   };
 
-  componentDidMount() {
-    console.log("componentDidMount")
-    this.setState({
-      age : 30
-    })
-  }
+  // componentDidMount() {
+  //   console.log("componentDidMount")
+  //   this.setState({
+  //     age : 30
+  //   })
+  // }
 
-  componentDidUpdate(){
-    console.log("componentDidUpdate")
-  }
+  // componentDidUpdate(){
+  //   console.log("componentDidUpdate")
+  // }
 
-  componentWillUnmount(){
-    console.log("AppComponent componentWillUnmount")
-  }
+  // componentWillUnmount(){
+  //   console.log("AppComponent componentWillUnmount")
+  // }
 
-  getSnapshotBeforeUpdate(){
-    console.log("getSnapshotBeforeUpdate")
-  }
+  // getSnapshotBeforeUpdate(){
+  //   console.log("getSnapshotBeforeUpdate")
+  // }
 
-  static getDerivedStateFromProps(){
-    console.log("getDerivedStateFromProps")
-  }
+  // static getDerivedStateFromProps(){
+  //   console.log("getDerivedStateFromProps")
+  // }
   render(){
-    return <div>{this.state.age == 42 ? <ChildComponent></ChildComponent> : this.state.age}</div>
+    return <div onClick={()=>{
+      debugger
+      this.setState({age : 90})
+    }}>{this.state.age }</div>
   }
 }
 

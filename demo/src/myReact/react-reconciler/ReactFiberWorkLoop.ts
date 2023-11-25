@@ -25,7 +25,15 @@ let workInProgressRootRenderLanes = NoLanes
 let workInProgressRootExitStatus = RootIncomplete
 let rootWithPendingPassiveEffects:any = null
 
+let workInProgressRootSkippedLanes = NoLanes;
+const BatchedContext = /*               */ 0b001;
+const RenderContext = /*                */ 0b010;
+const CommitContext = /*                */ 0b100;
+
 let rootDoesHavePassiveEffects = false
+
+export const NoContext = /*             */ 0b000;
+let executionContext  = NoContext;
 
 export let subtreeRenderLanes = NoLanes
 let pendingPassiveEffectsLanes = NoLanes
@@ -74,7 +82,7 @@ function flushPassiveEffectsImpl(){
 }
 
 
-export function scheduleUpdateOnFiber(fiber,lane,eventTime){
+export function scheduleUpdateOnFiber( fiber,lane,eventTime){
   const root =  markUpdateLaneFromFiberToRoot(fiber,lane)
   markRootUpdated(root, lane, eventTime);
 
@@ -290,4 +298,14 @@ function commitRootImpl(root, renderPriorityLevel){
   flushSyncCallbacks()
   // onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
 
+}
+
+export function isUnsafeClassRenderPhaseUpdate(fiber){
+  return (
+    // TODO: Remove outdated deferRenderPhaseUpdateToNextBatch experiment. We
+    // decided not to enable it.
+    (!false ||
+      (fiber.mode & ConcurrentMode) == NoMode) &&
+    (executionContext & RenderContext) != NoContext
+  );
 }

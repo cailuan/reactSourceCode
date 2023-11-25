@@ -25,8 +25,8 @@ const setTextContent = function(node: Element, text: string): void {
 
     if (
       firstChild &&
-      firstChild === node.lastChild &&
-      firstChild.nodeType === TEXT_NODE
+      firstChild == node.lastChild &&
+      firstChild.nodeType == TEXT_NODE
     ) {
         
       firstChild.nodeValue = text;

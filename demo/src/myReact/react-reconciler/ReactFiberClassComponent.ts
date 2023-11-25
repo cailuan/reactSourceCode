@@ -1,8 +1,11 @@
 import * as React from "../react"
 import { emptyContextObject } from "./ReactFiberContext";
-import { set as setInstance } from "../shared/ReactInstanceMap";
-import { initializeUpdateQueue } from "./ReactUpdateQueue";
+import { set as setInstance , get as getInstance } from "../shared/ReactInstanceMap";
+import { cloneUpdateQueue, createUpdate, enqueueUpdate, initializeUpdateQueue, processUpdateQueue } from "./ReactUpdateQueue";
 import { NoLanes } from "./ReactFiberLane";
+import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
+import { checkHasForceUpdateAfterProcessing, entangleTransitions  , resetHasForceUpdateBeforeProcessing} from "./ReactFiberClassUpdateQueue";
+import { disableLegacyContext } from "../shared/ReactFeatureFlags";
 
 const fakeInternalInstance = {};
 export const emptyRefsObject = new React.Component().refs
@@ -22,21 +25,21 @@ function constructClassInstance(workInProgress, ctor,props){
     let foundWillReceivePropsName ;
     let foundWillUpdateName;
 
-    if(typeof instance.componentWillMount == 'function' && instance.componentWillMount.__suppressDeprecationWarning !== true ){
+    if(typeof instance.componentWillMount == 'function' && instance.componentWillMount.__suppressDeprecationWarning != true ){
         foundWillMountName = 'componentWillMount';
-    }else if (typeof instance.UNSAFE_componentWillMount === 'function') {
+    }else if (typeof instance.UNSAFE_componentWillMount == 'function') {
         foundWillMountName = 'UNSAFE_componentWillMount';
     }
 
-    if (typeof instance.componentWillReceiveProps === 'function' && instance.componentWillReceiveProps.__suppressDeprecationWarning !== true) {
+    if (typeof instance.componentWillReceiveProps == 'function' && instance.componentWillReceiveProps.__suppressDeprecationWarning != true) {
         foundWillReceivePropsName = 'componentWillReceiveProps';
-      } else if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
+      } else if (typeof instance.UNSAFE_componentWillReceiveProps == 'function') {
         foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
       }
 
-      if (typeof instance.componentWillUpdate === 'function' && instance.componentWillUpdate.__suppressDeprecationWarning !== true) {
+      if (typeof instance.componentWillUpdate == 'function' && instance.componentWillUpdate.__suppressDeprecationWarning != true) {
         foundWillUpdateName = 'componentWillUpdate';
-      } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+      } else if (typeof instance.UNSAFE_componentWillUpdate == 'function') {
         foundWillUpdateName = 'UNSAFE_componentWillUpdate';
       }
 
@@ -66,7 +69,24 @@ function adoptClassInstance(workInProgress, instance){
 
 const classComponentUpdater = {
     enqueueSetState(inst, payload, callback){
+        const fiber = getInstance(inst);
+        const eventTime = requestEventTime();
         
+        const lane = requestUpdateLane(fiber);
+        
+        const update = createUpdate(eventTime, lane);
+
+        update.payload = payload;
+        if(callback != null){
+            update.callback = callback;
+        }
+         enqueueUpdate(fiber, update, lane);
+         const root = scheduleUpdateOnFiber( fiber,lane , eventTime);
+        if(root != null){
+            
+            entangleTransitions(root, fiber, lane);
+            
+        }
     }
 }
 
@@ -107,11 +127,79 @@ function applyDerivedStateFromProps(workInProgress, ctor, getDerivedStateFromPro
     workInProgress.memoizedState = memoizedState;
 
     
-    if (workInProgress.lanes === NoLanes) {
+    if (workInProgress.lanes == NoLanes) {
         // Queue is always non-null for classes
         const updateQueue = (workInProgress.updateQueue);
         updateQueue.baseState = memoizedState;
       }
 }
 
-export {constructClassInstance , adoptClassInstance, mountClassInstance,  classComponentUpdater};
+function resumeMountClassInstance(workInProgress, ctor, newProps, renderLanes){
+    debugger
+}
+
+function updateClassInstance(current, workInProgress, ctor, newProps, renderLanes){
+    const instance = workInProgress.stateNode;
+    cloneUpdateQueue(current,workInProgress);
+    const unresolvedOldProps = workInProgress.memoizedProps;
+
+    const oldProps = unresolvedOldProps;
+
+    instance.props = oldProps;
+    const unresolvedNewProps = workInProgress.pendingProps;
+    const oldContext = instance.context;
+    const contextType = ctor.contextType;
+    let nextContext = emptyContextObject;
+
+    if(!disableLegacyContext){}
+
+    const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
+    const hasNewLifecycles =
+      typeof getDerivedStateFromProps == 'function' ||
+      typeof instance.getSnapshotBeforeUpdate == 'function';
+
+    //.  todo
+    resetHasForceUpdateBeforeProcessing();
+
+    const oldState = workInProgress.memoizedState;
+  let newState = (instance.state = oldState);
+    processUpdateQueue(workInProgress, newProps, instance,renderLanes);
+    newState = workInProgress.memoizedState;
+
+    const shouldUpdate = checkHasForceUpdateAfterProcessing() || checkShouldComponentUpdate(
+        workInProgress,
+        ctor,
+        oldProps,
+        newProps,
+        oldState,
+        newState,
+        nextContext,
+      )
+
+        if(shouldUpdate){
+
+        }
+
+
+    instance.props = newProps;
+    instance.state = newState;
+    instance.context = nextContext;
+  
+    return shouldUpdate;
+
+}
+
+function checkShouldComponentUpdate(
+    workInProgress,
+    ctor,
+    oldProps,
+    newProps,
+    oldState,
+    newState,
+    nextContext,
+){
+    const instance = workInProgress.stateNode;
+    return true;
+}
+
+export {constructClassInstance , adoptClassInstance, mountClassInstance,updateClassInstance, resumeMountClassInstance,  classComponentUpdater};
