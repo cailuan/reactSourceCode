@@ -1,6 +1,7 @@
 import React from "react";
 // import ReactDOM from "react-dom";
 
+import { Component } from "./myReact/react";
 import {createContext , forwardRef} from './myReact/react/react'
 import { createRoot } from "./myReact/react-dom";
 import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext, useImperativeHandle ,useInsertionEffect} from "./myReact/react";
@@ -298,8 +299,17 @@ function RootY(){
     </div>
 }
 
+class AppComponent extends Component {
+  // componentWillUnmount(){
+  //   console.log("ChildComponent componentWillUnmount")
+  // }
+  render (){
+    return <div>AppComponent</div>
+  }
+}
+
 export default function(){
     document.title = "my react"
-    createRoot(rootEl).render(<RootY/ >);
+    createRoot(rootEl).render(<AppComponent />);
 
 }

@@ -2,7 +2,7 @@ import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FORWARD_REF_TYPE, REACT_F
 import { NoFlags } from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import {resolveForwardRefForHotReloading} from './ReactFiberHotReloading'
-import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef } from "./ReactWorkTags"
+import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef, ClassComponent } from "./ReactWorkTags"
 
 export function createHostRootFiber(){
 
@@ -81,6 +81,8 @@ export function createFiberFromTypeAndProps(type,key,pendingProps,owner,mode,lan
   if(typeof type == 'function'){
     if(shouldConstruct(type)){
       // react class
+      fiberTag = ClassComponent;
+      
     }else{
       
     }

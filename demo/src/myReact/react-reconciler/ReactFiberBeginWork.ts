@@ -2,11 +2,12 @@ import { reconcileChildFibers,mountChildFibers, cloneChildFibers } from "./React
 import { pushHostContainer } from "./ReactFiberHostContext";
 import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
-import { ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
+import { ClassComponent, ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
 import { PerformedWork, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
 import { prepareToReadContext, pushProvider } from "./ReactFiberNewContext";
+import {constructClassInstance, mountClassInstance} from "./ReactFiberClassComponent"
 
 let didReceiveUpdate = false
 let hasWarnedAboutUsingNoValuePropOnContextProvider = false
@@ -121,7 +122,21 @@ export function beginWork(current, workInProgress, renderLanes){
           ? unresolvedProps
           : {} // resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(current,workInProgress,Component,resolvedProps,renderLanes)
-    }
+    };
+    case ClassComponent: {
+      
+      const Component = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps = unresolvedProps;
+      return updateClassComponent(
+        current,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderLanes,
+      );
+      
+    };
      
     case ContextProvider:
       return updateContextProvider(current, workInProgress ,renderLanes)
@@ -144,6 +159,57 @@ export function beginWork(current, workInProgress, renderLanes){
 
 
   }
+}
+
+function updateClassComponent(
+  current,
+  workInProgress,
+  Component,
+  nextProps,
+  renderLanes
+){
+  if(workInProgress.type != workInProgress.elementType ){
+    const innerPropTypes = Component.propTypes;
+
+  }
+
+  let hasContext = false;
+  const instance = workInProgress.stateNode;
+
+  let shouldUpdate;
+  if(instance == null){
+    constructClassInstance(workInProgress, Component, nextProps);
+    mountClassInstance(workInProgress, Component, nextProps, renderLanes);
+    
+
+  }  
+
+  const nextUnitOfWork = finishClassComponent(
+    current,
+    workInProgress,
+    Component,
+    shouldUpdate,
+    hasContext,
+    renderLanes,
+  );
+
+  return nextUnitOfWork;
+}
+
+function finishClassComponent(current,workInProgress, Component, shouldUpdate, hasContext, renderLanes) {
+  markRef(current, workInProgress);
+  const instance = workInProgress.stateNode;
+
+  let nextChildren;
+  nextChildren = instance.render();
+
+  workInProgress.flags |= PerformedWork;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+
+
+  workInProgress.memoizedState = instance.state;
+
+  return workInProgress.child;
 }
 
 function mountIndeterminateComponent(_current,workInProgress,Component,renderLanes){

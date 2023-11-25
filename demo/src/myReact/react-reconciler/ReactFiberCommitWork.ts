@@ -6,7 +6,7 @@ import { Passive as HookPassive , Layout as HookLayout,NoFlags as NoHookEffect, 
   Layout,
   HasEffect, } from "./ReactHookEffectTags"
 import { ConcurrentMode, ProfileMode } from "./ReactTypeOfMode"
-import { ForwardRef, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, MemoComponent } from "./ReactWorkTags"
+import { ClassComponent, ForwardRef, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, MemoComponent } from "./ReactWorkTags"
 
 let nextEffect:any = null
 let inProgressLanes = null
@@ -52,6 +52,12 @@ function commitMutationEffectsOnFiber(finishedWork,root,lanes){
         }
 
       }
+      return;
+    }
+    case ClassComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+
       return;
     }
     case HostRoot:{

@@ -1,5 +1,5 @@
 import React ,{useInsertionEffect,useLayoutEffect,useState,useRef} from "react";
-import {createRoot} from "react-dom";
+import {createRoot} from "react-dom/client";
 
 const rootEl = document.getElementById("root");
 
@@ -80,8 +80,49 @@ function RootY(){
     </div>
 }
 
+class AppComponent extends React.Component {
+  state = {
+    age: 42,
+  };
+
+  componentDidMount() {
+    console.log("componentDidMount")
+    this.setState({
+      age : 30
+    })
+  }
+
+  componentDidUpdate(){
+    console.log("componentDidUpdate")
+  }
+
+  componentWillUnmount(){
+    console.log("AppComponent componentWillUnmount")
+  }
+
+  getSnapshotBeforeUpdate(){
+    console.log("getSnapshotBeforeUpdate")
+  }
+
+  static getDerivedStateFromProps(){
+    console.log("getDerivedStateFromProps")
+  }
+  render(){
+    return <div>{this.state.age == 42 ? <ChildComponent></ChildComponent> : this.state.age}</div>
+  }
+}
+
+class ChildComponent extends React.Component {
+  componentWillUnmount(){
+    console.log("ChildComponent componentWillUnmount")
+  }
+  render (){
+    return <div>{ChildComponent}</div>
+  }
+}
+
 export default function(){
     document.title = "origin react"
     debugger
-    createRoot(rootEl).render(<RootY/ >);
+    createRoot(rootEl).render(<AppComponent />);
 }
