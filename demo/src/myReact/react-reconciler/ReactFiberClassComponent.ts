@@ -2,6 +2,7 @@ import * as React from "../react"
 import { emptyContextObject } from "./ReactFiberContext";
 import { set as setInstance } from "../shared/ReactInstanceMap";
 import { initializeUpdateQueue } from "./ReactUpdateQueue";
+import { NoLanes } from "./ReactFiberLane";
 
 const fakeInternalInstance = {};
 export const emptyRefsObject = new React.Component().refs
@@ -84,10 +85,33 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes){
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
 
   if( typeof getDerivedStateFromProps == 'function') {
-    // todo
+   
+    applyDerivedStateFromProps(
+        workInProgress,
+        ctor,
+        getDerivedStateFromProps,
+        newProps,
+      );
     instance.state = workInProgress.memoizedState;
   }
 
+}
+
+function applyDerivedStateFromProps(workInProgress, ctor, getDerivedStateFromProps , nextProps){
+    const prevState = workInProgress.memoizedState;
+
+    let partialState = getDerivedStateFromProps(nextProps ,prevState);
+
+    const memoizedState = prevState == null ? prevState : Object.assign({}, prevState, partialState);
+
+    workInProgress.memoizedState = memoizedState;
+
+    
+    if (workInProgress.lanes === NoLanes) {
+        // Queue is always non-null for classes
+        const updateQueue = (workInProgress.updateQueue);
+        updateQueue.baseState = memoizedState;
+      }
 }
 
 export {constructClassInstance , adoptClassInstance, mountClassInstance,  classComponentUpdater};
