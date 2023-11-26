@@ -6,6 +6,7 @@ import { NoLanes } from "./ReactFiberLane";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { checkHasForceUpdateAfterProcessing, entangleTransitions  , resetHasForceUpdateBeforeProcessing} from "./ReactFiberClassUpdateQueue";
 import { disableLegacyContext } from "../shared/ReactFeatureFlags";
+import { LayoutStatic, Update } from "./ReactFiberFlags";
 
 const fakeInternalInstance = {};
 export const emptyRefsObject = new React.Component().refs
@@ -113,6 +114,13 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes){
         newProps,
       );
     instance.state = workInProgress.memoizedState;
+  }
+
+  if(typeof instance.componentDidMount == 'function' ){ 
+    let fiberFlags = Update;
+    fiberFlags |= LayoutStatic
+
+    workInProgress.flags |= fiberFlags;
   }
 
 }

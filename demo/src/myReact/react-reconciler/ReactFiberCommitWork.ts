@@ -1,6 +1,7 @@
 import { appendChild, appendChildToContainer, commitTextUpdate, commitUpdate, insertBefore, removeChild, removeChildFromContainer, resetTextContent } from "../react-dom/client/ReactDOMHostConfig"
 import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, Hydrating, ContentReset } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
+import { resolveDefaultProps } from "./ReactFiberLazyComponent"
 import { Passive as HookPassive , Layout as HookLayout,NoFlags as NoHookEffect, Insertion as HookInsertion,
   HasEffect as HookHasEffect,
   Layout,
@@ -481,7 +482,36 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
       case ForwardRef:
       case FunctionComponent:
         commitHookEffectListMount(HookLayout | HookHasEffect,finishedWork )
-        break
+        break;
+      case ClassComponent:
+        {
+          debugger
+          const instance = finishedWork.stateNode;
+          if(finishedWork.flags & Update) {
+            if(!offscreenSubtreeWasHidden){
+              //  等于function 的layoutEffect 钩子
+              if(current == null) {
+                instance.componentDidMount()
+              }else {
+                //todo
+                const prevProps = finishedWork.elementType === finishedWork.type ? current.memoizedProps : resolveDefaultProps(
+                  finishedWork.type,
+                  current.memoizedProps,
+                );
+                
+                const prevState = current.memoizedState;
+
+                instance.componentDidUpdate(
+                  prevProps,
+                  prevState,
+                  instance.__reactInternalSnapshotBeforeUpdate,
+                );
+              }
+            }
+          }
+
+          break;
+        }
     }
   }
 

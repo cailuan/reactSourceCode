@@ -1,5 +1,6 @@
-import React ,{useInsertionEffect,useLayoutEffect,useState,useRef} from "react";
+import React ,{useInsertionEffect,useLayoutEffect,useState,useRef,useEffect } from "react";
 import {createRoot} from "react-dom/client";
+
 
 const rootEl = document.getElementById("root");
 
@@ -85,28 +86,33 @@ class AppComponent extends React.Component {
     age: 42,
   };
 
-  // componentDidMount() {
-  //   console.log("componentDidMount")
-  //   this.setState({
-  //     age : 30
-  //   })
-  // }
+  componentDidMount() {
+    debugger
+    console.log("componentDidMount")
+    this.setState({
+      age : 30
+    })
+  }
 
-  // componentDidUpdate(){
-  //   console.log("componentDidUpdate")
-  // }
+  componentDidUpdate(){
+    console.log("componentDidUpdate")
+  }
 
-  // componentWillUnmount(){
-  //   console.log("AppComponent componentWillUnmount")
-  // }
+  componentWillUnmount(){
+    console.log("AppComponent componentWillUnmount")
+  }
 
-  // getSnapshotBeforeUpdate(){
-  //   console.log("getSnapshotBeforeUpdate")
-  // }
+  getSnapshotBeforeUpdate(){
+    console.log("getSnapshotBeforeUpdate")
+  }
 
-  // static getDerivedStateFromProps(){
-  //   console.log("getDerivedStateFromProps")
-  // }
+  static getDerivedStateFromProps(){
+    debugger;
+    console.log("getDerivedStateFromProps")
+    return {
+      name :" p"
+    }
+  }
   render(){
     return <div onClick={()=>{
       debugger
@@ -123,6 +129,25 @@ class ChildComponent extends React.Component {
     return <div>{ChildComponent}</div>
   }
 }
+
+function Test(){
+  const [state,setState ] = useState(1)
+  useEffect(()=>{
+    debugger
+    setState(2)
+    return ()=>{
+      debugger
+    }
+  },[state])
+  useLayoutEffect(()=>{
+    debugger
+    return ()=>{
+      debugger
+    }
+  },[state])
+  return <div>{state}</div>
+}
+
 
 export default function(){
     document.title = "origin react"

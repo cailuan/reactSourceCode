@@ -306,6 +306,31 @@ class AppComponent extends Component {
   state = {
     age : 40
   }
+
+  componentDidMount(){
+    console.log(" componentDidMount -----")
+  }
+
+  componentDidUpdate(){
+    console.log("componentDidUpdate")
+  }
+
+  componentWillUnmount(){
+    console.log("AppComponent componentWillUnmount")
+  }
+
+  getSnapshotBeforeUpdate(){
+    console.log("getSnapshotBeforeUpdate")
+  }
+
+  static getDerivedStateFromProps(){
+    debugger;
+    console.log("getDerivedStateFromProps ======")
+    return {
+      name :" p",
+      age: 88
+    }
+  }
   render (){
     return <div onClick={()=>{
       debugger
