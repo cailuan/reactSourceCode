@@ -1,4 +1,5 @@
 import { appendChild, appendChildToContainer, commitTextUpdate, commitUpdate, insertBefore, removeChild, removeChildFromContainer, resetTextContent } from "../react-dom/client/ReactDOMHostConfig"
+import { enableSuspenseLayoutEffectSemantics } from "../shared/ReactFeatureFlags"
 import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, Hydrating, ContentReset } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { resolveDefaultProps } from "./ReactFiberLazyComponent"
@@ -6,8 +7,8 @@ import { Passive as HookPassive , Layout as HookLayout,NoFlags as NoHookEffect, 
   HasEffect as HookHasEffect,
   Layout,
   HasEffect, } from "./ReactHookEffectTags"
-import { ConcurrentMode, ProfileMode } from "./ReactTypeOfMode"
-import { ClassComponent, ForwardRef, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, MemoComponent } from "./ReactWorkTags"
+import { ConcurrentMode, NoMode, ProfileMode } from "./ReactTypeOfMode"
+import { ClassComponent, ForwardRef, FunctionComponent, HostComponent, HostPortal, HostRoot, HostText, MemoComponent, OffscreenComponent } from "./ReactWorkTags"
 
 let nextEffect:any = null
 let inProgressLanes = null
@@ -444,9 +445,15 @@ export function commitLayoutEffects(finishedWork,root,committedLanes){
 }
 
 function commitLayoutEffects_begin(subtreeRoot,root,committedLanes){
+  const isModernRoot = (subtreeRoot.mode & ConcurrentMode) !== NoMode;
   while (nextEffect != null) {
     const fiber = nextEffect;
     const firstChild = fiber.child;
+
+    if(enableSuspenseLayoutEffectSemantics && fiber.tag == OffscreenComponent && isModernRoot ){
+      debugger
+    }
+
     if((fiber.subtreeFlags & LayoutMask) != NoFlags && firstChild != null){
       nextEffect = firstChild;
     }else{

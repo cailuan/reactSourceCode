@@ -5,7 +5,7 @@ import { cloneUpdateQueue, createUpdate, enqueueUpdate, initializeUpdateQueue, p
 import { NoLanes } from "./ReactFiberLane";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { checkHasForceUpdateAfterProcessing, entangleTransitions  , resetHasForceUpdateBeforeProcessing} from "./ReactFiberClassUpdateQueue";
-import { disableLegacyContext } from "../shared/ReactFeatureFlags";
+import { disableLegacyContext , enableLazyContextPropagation} from "../shared/ReactFeatureFlags";
 import { LayoutStatic, Update } from "./ReactFiberFlags";
 
 const fakeInternalInstance = {};
@@ -170,9 +170,22 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderLane
     resetHasForceUpdateBeforeProcessing();
 
     const oldState = workInProgress.memoizedState;
-  let newState = (instance.state = oldState);
+    let newState = (instance.state = oldState);
     processUpdateQueue(workInProgress, newProps, instance,renderLanes);
     newState = workInProgress.memoizedState;
+
+
+    if(unresolvedOldProps == unresolvedNewProps && oldState == newState && !(
+        enableLazyContextPropagation && current != null && current.dependencies != null
+    ) ) {
+
+        if(typeof instance.componentDidUpdate == 'function'){
+            if(unresolvedOldProps != current.memoizedProps || oldState != current.memoizedState){
+                workInProgress.flags |= Update;
+            }
+        }
+        return false;
+    }
 
     const shouldUpdate = checkHasForceUpdateAfterProcessing() || checkShouldComponentUpdate(
         workInProgress,
@@ -184,9 +197,22 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderLane
         nextContext,
       )
 
-        if(shouldUpdate){
-
+    if(shouldUpdate){
+        if(typeof instance.componentDidUpdate == 'function'){
+            workInProgress.flags |= Update
         }
+    }else {
+        if (typeof instance.componentDidUpdate === 'function') {
+            if (
+              unresolvedOldProps !== current.memoizedProps ||
+              oldState !== current.memoizedState
+            ) {
+              workInProgress.flags |= Update;
+            }
+        }
+        workInProgress.memoizedProps = newProps;
+        workInProgress.memoizedState = newState;
+    }
 
 
     instance.props = newProps;

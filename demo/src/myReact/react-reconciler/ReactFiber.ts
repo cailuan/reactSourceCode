@@ -1,5 +1,5 @@
 import { REACT_CONTEXT_TYPE, REACT_ELEMENT_TYPE, REACT_FORWARD_REF_TYPE, REACT_FRAGMENT_TYPE, REACT_PROVIDER_TYPE } from "../shared/ReactSymbols";
-import { NoFlags } from "./ReactFiberFlags";
+import { NoFlags, StaticMask } from "./ReactFiberFlags";
 import { NoLanes } from "./ReactFiberLane";
 import {resolveForwardRefForHotReloading} from './ReactFiberHotReloading'
 import { Fragment, HostComponent, HostRoot, HostText, IndeterminateComponent, ContextProvider, ContextConsumer, ForwardRef, ClassComponent } from "./ReactWorkTags"
@@ -43,7 +43,7 @@ export function createWorkInProgress(current,pendingProps){
     workInProgress.subtreeFlags = NoFlags;
 
   }
-  workInProgress.flags = current.flags // & StaticMask
+  workInProgress.flags = current.flags  & StaticMask //
   workInProgress.childLanes = current.childLanes
   workInProgress.lanes = current.lanes;
   workInProgress.child = current.child;

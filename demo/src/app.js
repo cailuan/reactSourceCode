@@ -114,19 +114,21 @@ class AppComponent extends React.Component {
     }
   }
   render(){
-    return <div onClick={()=>{
-      debugger
-      this.setState({age : 90})
-    }}>{this.state.age }</div>
+    return <ChildComponent />
   }
 }
 
 class ChildComponent extends React.Component {
+  componentDidMount() {
+    debugger
+    console.log("ChildComponent componentDidMount")
+ 
+  }
   componentWillUnmount(){
     console.log("ChildComponent componentWillUnmount")
   }
   render (){
-    return <div>{ChildComponent}</div>
+    return <div>{'ChildComponent'}</div>
   }
 }
 

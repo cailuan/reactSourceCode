@@ -308,6 +308,9 @@ class AppComponent extends Component {
   }
 
   componentDidMount(){
+    this.setState({
+      age : 90
+    })
     console.log(" componentDidMount -----")
   }
 
@@ -332,10 +335,19 @@ class AppComponent extends Component {
     }
   }
   render (){
-    return <div onClick={()=>{
-      debugger
-      this.setState({age : 90})
-    }}>{this.state.age }</div>
+    return <ChildComponent />
+  }
+}
+
+class ChildComponent extends React.Component {
+  componentDidMount(){
+    console.log("ChildComponent componentDidMount -----")
+  }
+  componentWillUnmount(){
+    console.log("ChildComponent componentWillUnmount")
+  }
+  render (){
+    return <div>{'ChildComponent'}</div>
   }
 }
 
