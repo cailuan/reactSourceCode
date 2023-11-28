@@ -335,11 +335,12 @@ class AppComponent extends Component {
     }
   }
   render (){
-    return <ChildComponent />
+    console.log(this.state.age, '---')
+    return this.state.age == 88 ?  <ChildComponent /> : this.state.age
   }
 }
 
-class ChildComponent extends React.Component {
+class ChildComponent extends Component {
   componentDidMount(){
     console.log("ChildComponent componentDidMount -----")
   }
@@ -347,10 +348,19 @@ class ChildComponent extends React.Component {
     console.log("ChildComponent componentWillUnmount")
   }
   render (){
-    return <div>{'ChildComponent'}</div>
+    return <div><ChildChildComponent></ChildChildComponent></div>
   }
 }
 
+
+class ChildChildComponent extends Component {
+  componentWillUnmount(){
+    console.log("ChildChildComponent componentWillUnmount")
+  }
+  render(){
+    return <div>ChildComponent</div>
+  }
+} 
 export default function(){
     document.title = "my react"
     createRoot(rootEl).render(<AppComponent />);

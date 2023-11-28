@@ -98,13 +98,13 @@ class AppComponent extends React.Component {
     console.log("componentDidUpdate")
   }
 
-  componentWillUnmount(){
-    console.log("AppComponent componentWillUnmount")
-  }
+  // componentWillUnmount(){
+  //   console.log("AppComponent componentWillUnmount")
+  // }
 
-  getSnapshotBeforeUpdate(){
-    console.log("getSnapshotBeforeUpdate")
-  }
+  // getSnapshotBeforeUpdate(){
+  //   console.log("getSnapshotBeforeUpdate")
+  // }
 
   static getDerivedStateFromProps(){
     debugger;
@@ -113,8 +113,10 @@ class AppComponent extends React.Component {
       name :" p"
     }
   }
+  
   render(){
-    return <ChildComponent />
+    console.log(this.state.age, 'age')
+    return this.state.age == 42 ?  <ChildComponent /> : this.state.age
   }
 }
 
@@ -128,9 +130,18 @@ class ChildComponent extends React.Component {
     console.log("ChildComponent componentWillUnmount")
   }
   render (){
-    return <div>{'ChildComponent'}</div>
+    return <div><ChildChildComponent></ChildChildComponent></div>
   }
 }
+
+class ChildChildComponent extends React.Component {
+  componentWillUnmount(){
+    console.log("ChildChildComponent componentWillUnmount")
+  }
+  render(){
+    return <div>ChildComponent</div>
+  }
+} 
 
 function Test(){
   const [state,setState ] = useState(1)

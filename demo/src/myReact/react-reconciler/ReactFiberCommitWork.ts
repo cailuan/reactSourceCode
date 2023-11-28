@@ -131,6 +131,21 @@ function commitMutationEffectsOnFiber(finishedWork,root,lanes){
       }
       return;
     }
+    case HostText : {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+      if (flags & Update) {
+        const textInstance = finishedWork.stateNode;
+        const newText = finishedWork.memoizedProps;
+        const oldText = current !== null ? current.memoizedProps : newText;
+        try {
+          commitTextUpdate(textInstance, oldText, newText);
+        } catch (error) {
+        
+        }
+      }
+      return
+    }
   }
 }
 
@@ -186,6 +201,27 @@ function commitDeletionEffects(root, returnFiber, deletedFiber){
   hostParentIsContainer = false;
 
   detachFiberMutation(deletedFiber);
+}
+
+const callComponentWillUnmountWithTimer = function(current, instance){
+  instance.props = current.memoizedProps;
+  instance.state = current.memoizedState;
+
+  if(current.mode & ProfileMode){
+    try{
+      instance.componentWillUnmount()
+    }catch(e){}
+  }else{
+    instance.componentWillUnmount();
+  }
+}
+
+function safelyCallComponentWillUnmount(current, nearestMountedAncestor, instance){
+  try{
+    callComponentWillUnmountWithTimer(current, instance);
+  }catch(e){
+
+  }
 }
 
 function commitDeletionEffectsOnFiber(finishedRoot,nearestMountedAncestor, deletedFiber ){
@@ -272,6 +308,22 @@ function commitDeletionEffectsOnFiber(finishedRoot,nearestMountedAncestor, delet
       }
       return;
     }
+
+    case ClassComponent: {
+      if(!offscreenSubtreeWasHidden){
+        const instance = deletedFiber.stateNode;
+        if(typeof instance.componentWillUnmount == 'function'){
+          safelyCallComponentWillUnmount(
+            deletedFiber,
+            nearestMountedAncestor,
+            instance,
+          );
+        }
+      }
+
+      recursivelyTraverseDeletionEffects(finishedRoot, nearestMountedAncestor, deletedFiber);
+      return
+    }
     
     default: {
       recursivelyTraverseDeletionEffects(
@@ -317,7 +369,13 @@ function safelyDetachRef(current, nearestMountedAncestor){
 
 function getHostParentFiber(fiber){
   let parent = fiber.return;
-  return parent
+  while(parent != null) {
+    if(isHostParent(parent)){
+      return parent;
+    }
+    parent = parent.return;
+  }
+  // return parent
 }
 
 export function commitPlacement(finishedWork){

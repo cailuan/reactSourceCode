@@ -32,6 +32,12 @@ function ChildReconciler(shouldTrackSideEffects){
     return newFiber
   }
   function reconcileSingleTextNode(returnFiber,currentFirstChild,textContent,lanes){
+
+    if(currentFirstChild != null && currentFirstChild.tag == HostText){
+
+    }
+
+    deleteRemainingChildren(returnFiber, currentFirstChild);
     const created = createFiberFromText(textContent,returnFiber.mode,lanes)
     created.return = returnFiber
     return created
