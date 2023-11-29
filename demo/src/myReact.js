@@ -322,8 +322,10 @@ class AppComponent extends Component {
     console.log("AppComponent componentWillUnmount")
   }
 
-  getSnapshotBeforeUpdate(){
-    console.log("getSnapshotBeforeUpdate")
+
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    console.log(prevProps, prevState,"getSnapshotBeforeUpdate")
+    return null;
   }
 
   static getDerivedStateFromProps(){

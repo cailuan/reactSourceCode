@@ -6,7 +6,7 @@ import { NoLanes } from "./ReactFiberLane";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { checkHasForceUpdateAfterProcessing, entangleTransitions  , resetHasForceUpdateBeforeProcessing} from "./ReactFiberClassUpdateQueue";
 import { disableLegacyContext , enableLazyContextPropagation} from "../shared/ReactFeatureFlags";
-import { LayoutStatic, Update } from "./ReactFiberFlags";
+import { LayoutStatic, Snapshot, Update } from "./ReactFiberFlags";
 
 const fakeInternalInstance = {};
 export const emptyRefsObject = new React.Component().refs
@@ -184,6 +184,15 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderLane
                 workInProgress.flags |= Update;
             }
         }
+
+        if(typeof instance.getSnapshotBeforeUpdate == 'function'){
+            if (
+                unresolvedOldProps !== current.memoizedProps ||
+                oldState !== current.memoizedState
+              ) {
+                workInProgress.flags |= Snapshot;
+              }
+        }
         return false;
     }
 
@@ -201,6 +210,10 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderLane
         if(typeof instance.componentDidUpdate == 'function'){
             workInProgress.flags |= Update
         }
+
+        if(typeof instance.getSnapshotBeforeUpdate == 'function'){
+            workInProgress.flags |= Snapshot;
+        }
     }else {
         if (typeof instance.componentDidUpdate === 'function') {
             if (
@@ -210,6 +223,16 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderLane
               workInProgress.flags |= Update;
             }
         }
+
+        if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+            if (
+              unresolvedOldProps !== current.memoizedProps ||
+              oldState !== current.memoizedState
+            ) {
+              workInProgress.flags |= Snapshot;
+            }
+          }
+
         workInProgress.memoizedProps = newProps;
         workInProgress.memoizedState = newState;
     }

@@ -1,6 +1,6 @@
 import { appendChild, appendChildToContainer, commitTextUpdate, commitUpdate, insertBefore, removeChild, removeChildFromContainer, resetTextContent } from "../react-dom/client/ReactDOMHostConfig"
-import { enableSuspenseLayoutEffectSemantics } from "../shared/ReactFeatureFlags"
-import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, Hydrating, ContentReset } from "./ReactFiberFlags"
+import { enableCreateEventHandleAPI, enableSuspenseLayoutEffectSemantics } from "../shared/ReactFeatureFlags"
+import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, Hydrating, ContentReset, BeforeMutationMask, Snapshot } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { resolveDefaultProps } from "./ReactFiberLazyComponent"
 import { Passive as HookPassive , Layout as HookLayout,NoFlags as NoHookEffect, Insertion as HookInsertion,
@@ -452,10 +452,82 @@ function insertOrAppendPlacementNodeIntoContainer(node,before,parent){
   }
 }
 
-
+let shouldFireAfterActiveInstanceBlur = false;
 
 export function commitBeforeMutationEffects(root,firstChild){
+  nextEffect = firstChild;
+  commitBeforeMutationEffects_begin();
 
+  const shouldFire = shouldFireAfterActiveInstanceBlur;
+  shouldFireAfterActiveInstanceBlur = false;
+  return shouldFire;
+}
+
+function commitBeforeMutationEffects_begin(){
+  while (nextEffect != null) {
+    const fiber = nextEffect;
+    if(enableCreateEventHandleAPI){}
+    const child = fiber.child;
+
+    if((fiber.subtreeFlags & BeforeMutationMask) != NoFlags && child != null){
+      child.return = fiber;
+      nextEffect = child;
+    }else{
+      commitBeforeMutationEffects_complete();
+    }
+
+  }
+}
+function commitBeforeMutationEffects_complete(){
+  while (nextEffect != null) {
+    const fiber = nextEffect;
+
+    try {
+      commitBeforeMutationEffectsOnFiber(fiber);
+    } catch (error) {
+
+    }
+    const sibling = fiber.sibling;
+    if (sibling != null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = fiber.return;
+  }
+}
+
+function commitBeforeMutationEffectsOnFiber(finishedWork){
+  const current = finishedWork.alternate;
+  const flags = finishedWork.flags;
+
+  if((flags & Snapshot) != NoFlags){
+    switch (finishedWork.tag) {
+
+      case FunctionComponent:
+      case ForwardRef:{
+          break;
+      }
+      case ClassComponent:{
+        if (current !== null) {
+          const prevProps = current.memoizedProps;
+          const prevState = current.memoizedState;
+          const instance = finishedWork.stateNode;
+
+          const snapshot = instance.getSnapshotBeforeUpdate(
+            finishedWork.elementType === finishedWork.type
+              ? prevProps
+              : resolveDefaultProps(finishedWork.type, prevProps),
+            prevState,
+          );
+
+          instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+        }
+        break
+      }
+    }
+  }
 }
 
 

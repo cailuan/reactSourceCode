@@ -113,10 +113,14 @@ class AppComponent extends React.Component {
       name :" p"
     }
   }
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    console.log(prevProps, prevState,"getSnapshotBeforeUpdate")
+    return null;
+  }
   
   render(){
     console.log(this.state.age, 'age')
-    return this.state.age == 42 ?  <ChildComponent /> : this.state.age
+    return  this.state.age
   }
 }
 
@@ -158,7 +162,25 @@ function Test(){
       debugger
     }
   },[state])
-  return <div>{state}</div>
+  return state 
+}
+function ChildComponents(){
+  useEffect(()=>{
+    debugger
+
+    return ()=>{
+      console.log("ChildComponents useEffect")
+      debugger
+    }
+  },[])
+  useLayoutEffect(()=>{
+    debugger
+    return ()=>{
+      console.log("ChildComponents useLayoutEffect")
+      debugger
+    }
+  })
+  return <div>child</div>
 }
 
 

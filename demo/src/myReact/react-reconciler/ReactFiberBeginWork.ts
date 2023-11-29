@@ -16,6 +16,11 @@ export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
 
+function attemptEarlyBailoutIfNoScheduledUpdate(current, workInProgress, renderLanes){
+  switch(workInProgress.tag){}
+  return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+}
+
 function bailoutOnAlreadyFinishedWork(current,workInProgress,renderLanes){
   if(!includesSomeLane(renderLanes,workInProgress.childLanes)){
     return
@@ -92,7 +97,7 @@ export function beginWork(current, workInProgress, renderLanes){
         case HostRoot:
           break
       }
-      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
+      return attemptEarlyBailoutIfNoScheduledUpdate(current, workInProgress, renderLanes)
     }else{
       didReceiveUpdate = false
     }
