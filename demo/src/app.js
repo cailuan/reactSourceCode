@@ -117,10 +117,15 @@ class AppComponent extends React.Component {
     console.log(prevProps, prevState,"getSnapshotBeforeUpdate")
     return null;
   }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    console.log(nextProps,nextState , 'shouldComponentUpdate');
+    return false;
+  }
   
   render(){
     console.log(this.state.age, 'age')
-    return  this.state.age
+    return  this.state.age != 30 ? <ChildChildComponent /> : this.state.age
   }
 }
 

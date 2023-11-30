@@ -321,7 +321,10 @@ class AppComponent extends Component {
   componentWillUnmount(){
     console.log("AppComponent componentWillUnmount")
   }
-
+  shouldComponentUpdate(nextProps, nextState) {
+    console.log(nextProps,nextState , 'shouldComponentUpdate');
+    return false;
+ }
 
   getSnapshotBeforeUpdate(prevProps, prevState) {
     console.log(prevProps, prevState,"getSnapshotBeforeUpdate")
@@ -338,7 +341,7 @@ class AppComponent extends Component {
   }
   render (){
     console.log(this.state.age, '---')
-    return this.state.age == 88 ?  <ChildComponent /> : this.state.age
+    return this.state.age
   }
 }
 

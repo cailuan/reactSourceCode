@@ -256,6 +256,14 @@ function checkShouldComponentUpdate(
     nextContext,
 ){
     const instance = workInProgress.stateNode;
+    if(typeof instance.shouldComponentUpdate == 'function'){
+        let shouldUpdate = instance.shouldComponentUpdate(
+            newProps,
+            newState,
+            nextContext,
+          );
+        return shouldUpdate;
+    }
     return true;
 }
 

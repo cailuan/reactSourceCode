@@ -4,7 +4,7 @@ import { includesSomeLane, NoLanes } from "./ReactFiberLane";
 import { cloneUpdateQueue,processUpdateQueue } from "./ReactUpdateQueue";
 import { ClassComponent, ContextProvider, ForwardRef, Fragment, FunctionComponent, HostComponent, HostRoot, HostText, IndeterminateComponent } from "./ReactWorkTags";
 import {shouldSetTextContent} from './ReactFiberHostConfig'
-import { PerformedWork, Placement, Ref , RefStatic} from "./ReactFiberFlags";
+import { DidCapture, NoFlags, PerformedWork, Placement, Ref , RefStatic} from "./ReactFiberFlags";
 import { renderWithHooks ,bailoutHooks} from "./ReactFiberHooks";
 import { prepareToReadContext, pushProvider } from "./ReactFiberNewContext";
 import {constructClassInstance, mountClassInstance, resumeMountClassInstance, updateClassInstance} from "./ReactFiberClassComponent"
@@ -196,7 +196,7 @@ function updateClassComponent(
     }
     constructClassInstance(workInProgress, Component, nextProps);
     mountClassInstance(workInProgress, Component, nextProps, renderLanes);
-    
+    shouldUpdate = true;
 
   }  else if(current == null){
     shouldUpdate = resumeMountClassInstance(
@@ -232,6 +232,12 @@ function updateClassComponent(
 
 function finishClassComponent(current,workInProgress, Component, shouldUpdate, hasContext, renderLanes) {
   markRef(current, workInProgress);
+
+  const didCaptureError = (workInProgress.flags & DidCapture ) !== NoFlags;
+  if(!didCaptureError && !shouldUpdate){
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+  }
+
   const instance = workInProgress.stateNode;
 
   let nextChildren;
