@@ -71,3 +71,7 @@ export function removeLanes(set,subset){
 export function isTransitionLane(lane) {
   return (lane & TransitionLanes) != NoLanes;
 }
+
+export function isSubsetOfLanes(set, subset) {
+  return (set & subset) === subset;
+}

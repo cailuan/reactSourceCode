@@ -90,8 +90,29 @@ class AppComponent extends React.Component {
     debugger
     console.log("componentDidMount")
     this.setState({
-      age : 30
+      age : this.state.age + 30
+    },()=>{
+      console.log("age = 72")
     })
+    this.setState({
+      age : this.state.age + 10
+    },()=>{
+      console.log("age = 52")
+    })
+
+    setTimeout(()=>{
+      this.setState({
+        age : this.state.age + 30
+      },()=>{
+        console.log("age = 882")
+      })
+      this.setState({
+        age : this.state.age + 10
+      },()=>{
+        console.log("age = 992")
+      })
+  
+    },3000)
   }
 
   componentDidUpdate(){
@@ -118,14 +139,14 @@ class AppComponent extends React.Component {
     return null;
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    console.log(nextProps,nextState , 'shouldComponentUpdate');
-    return false;
-  }
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   console.log(nextProps,nextState , 'shouldComponentUpdate');
+  //   return false;
+  // }
   
   render(){
     console.log(this.state.age, 'age')
-    return  this.state.age != 30 ? <ChildChildComponent /> : this.state.age
+    return  this.state.age 
   }
 }
 

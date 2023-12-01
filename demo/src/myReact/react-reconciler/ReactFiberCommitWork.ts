@@ -1,5 +1,6 @@
 import { appendChild, appendChildToContainer, commitTextUpdate, commitUpdate, insertBefore, removeChild, removeChildFromContainer, resetTextContent } from "../react-dom/client/ReactDOMHostConfig"
 import { enableCreateEventHandleAPI, enableSuspenseLayoutEffectSemantics } from "../shared/ReactFeatureFlags"
+import { commitUpdateQueue } from "./ReactFiberClassUpdateQueue"
 import { MutationMask, NoFlags, Placement, Update,LayoutMask, Callback, Ref, PassiveMask,Passive, Hydrating, ContentReset, BeforeMutationMask, Snapshot } from "./ReactFiberFlags"
 import { NoLane, NoLanes } from "./ReactFiberLane"
 import { resolveDefaultProps } from "./ReactFiberLazyComponent"
@@ -647,6 +648,12 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
             }
           }
 
+          const updateQueue = finishedWork.updateQueue;
+          if(updateQueue != null){
+            commitUpdateQueue(finishedWork, updateQueue, instance);
+            
+          }
+
           break;
         }
     }
@@ -656,6 +663,7 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
     commitAttachRef(finishedWork)
   }
 }
+
 
 function commitAttachRef(finishedWork){
   

@@ -1,5 +1,6 @@
 import { enqueueConcurrentClassUpdate } from "./ReactFiberConcurrentUpdates";
-import { NoLanes } from "./ReactFiberLane";
+import { Callback } from "./ReactFiberFlags";
+import { NoLane, NoLanes, isSubsetOfLanes, mergeLanes } from "./ReactFiberLane";
 import { isUnsafeClassRenderPhaseUpdate } from "./ReactFiberWorkLoop";
 
 
@@ -50,6 +51,9 @@ export function enqueueUpdate(fiber,update,lane ?: any){
     const pending = sharedQueue.pending;
     if(pending == null){
       update.next = update
+    }else {
+      update.next = pending.next;
+      pending.next = update;
     }
   
   
@@ -113,18 +117,68 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
   }
 
   if(firstBaseUpdate != null){
-    let newLastBaseUpdate = null;
-    let newBaseState = null
+    let newLastBaseUpdate:any = null;
+    let newBaseState = null;
+    let newLanes = NoLanes;
     let update = firstBaseUpdate
     let newState = queue.baseState
-    let newFirstBaseUpdate = null
+    let newFirstBaseUpdate:any = null
     do{
       
       const updateLane = update.lane;
       const updateEventTime = update.eventTime;
 
-      newState =  getStateFromUpdate(workInProgress,queue,update,newState,props,instance)
-      let callback = update.callback
+      if(!isSubsetOfLanes(renderLanes, updateLane)){
+        const clone = {
+          eventTime: updateEventTime,
+          lane: updateLane,
+
+          tag: update.tag,
+          payload: update.payload,
+          callback: update.callback,
+
+          next: null,
+        };
+
+        if(newLastBaseUpdate == null ){
+          newFirstBaseUpdate = newLastBaseUpdate = clone;
+          newBaseState = newState;
+        }else{
+          newLastBaseUpdate = newLastBaseUpdate.next = clone;
+        }
+        newLanes = mergeLanes(newLanes, updateLane);
+      }else {
+        if(newLastBaseUpdate != null ){
+          const clone =  {
+            eventTime: updateEventTime,
+            // This update is going to be committed so we never want uncommit
+            // it. Using NoLane works because 0 is a subset of all bitmasks, so
+            // this will never be skipped by the check above.
+            lane: NoLane,
+
+            tag: update.tag,
+            payload: update.payload,
+            callback: update.callback,
+
+            next: null,
+          };
+
+          newLastBaseUpdate = newLastBaseUpdate.next = clone;
+        }
+        newState =  getStateFromUpdate(workInProgress,queue,update,newState,props,instance)
+        let callback = update.callback;
+        if(callback != null && update.lane != NoLane){
+          workInProgress.flags |= Callback;
+          const effects = queue.effects;
+          if (effects === null) {
+            queue.effects = [update];
+          } else {
+            effects.push(update);
+          }
+        }
+      }
+
+     
       update = update.next
       if(update == null){
         pendingQueue = queue.shared.pending;

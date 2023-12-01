@@ -307,12 +307,35 @@ class AppComponent extends Component {
     age : 40
   }
 
-  componentDidMount(){
+  componentDidMount() {
+    debugger
+    console.log("componentDidMount")
     this.setState({
-      age : 90
+      age : this.state.age + 30
+    },()=>{
+      console.log("age = 72")
     })
-    console.log(" componentDidMount -----")
+    this.setState({
+      age : this.state.age + 10
+    },()=>{
+      console.log("age = 52")
+    })
+
+    setTimeout(()=>{
+      this.setState({
+        age : this.state.age + 30
+      },()=>{
+        console.log("age = 882")
+      })
+      this.setState({
+        age : this.state.age + 10
+      },()=>{
+        console.log("age = 992")
+      })
+  
+    },3000)
   }
+
 
   componentDidUpdate(){
     console.log("componentDidUpdate")
@@ -321,10 +344,10 @@ class AppComponent extends Component {
   componentWillUnmount(){
     console.log("AppComponent componentWillUnmount")
   }
-  shouldComponentUpdate(nextProps, nextState) {
-    console.log(nextProps,nextState , 'shouldComponentUpdate');
-    return false;
- }
+//   shouldComponentUpdate(nextProps, nextState) {
+//     console.log(nextProps,nextState , 'shouldComponentUpdate');
+//     return false;
+//  }
 
   getSnapshotBeforeUpdate(prevProps, prevState) {
     console.log(prevProps, prevState,"getSnapshotBeforeUpdate")
@@ -336,7 +359,7 @@ class AppComponent extends Component {
     console.log("getDerivedStateFromProps ======")
     return {
       name :" p",
-      age: 88
+      // age: 88
     }
   }
   render (){
