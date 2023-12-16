@@ -1,13 +1,14 @@
 import objectIs from "../shared/objectIs";
 import ReactSharedInternals from "../shared/ReactSharedInternals"
+import { getCurrentUpdatePriority, setCurrentUpdatePriority, higherEventPriority, ContinuousEventPriority } from "./ReactEventPriorities";
 import { markWorkInProgressReceivedUpdate } from "./ReactFiberBeginWork";
 import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect, Update} from "./ReactFiberFlags";
-import { NoLanes ,removeLanes } from "./ReactFiberLane";
+import { isSubsetOfLanes, mergeLanes, NoLanes ,removeLanes } from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
-import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
+import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber , markSkippedUpdateLanes} from "./ReactFiberWorkLoop";
 import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout,  Insertion as HookInsertion,} from "./ReactHookEffectTags";
 import { NoMode, StrictEffectsMode } from "./ReactTypeOfMode";
-const {ReactCurrentDispatcher} = ReactSharedInternals
+const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals
 
 let currentHookNameInDev:string|null = null
 let HooksDispatcherOnMountInDEV:any = null
@@ -16,6 +17,7 @@ let workInProgressHook:any = null
 let currentlyRenderingFiber:any = null
 let hookTypesDev:any = null
 let InvalidNestedHooksDispatcherOnUpdateInDEV:any = null
+let renderLanes = NoLanes;
 
 let hookTypesUpdateIndexDev = -1
 
@@ -104,6 +106,11 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useInsertionEffect';
     mountHookTypesDev();
     return mountInsertionEffect(create, deps);
+  },
+  useTransition: ()=>{
+    currentHookNameInDev = 'useInsertionEffect';
+    mountHookTypesDev();
+    return mountTransition();
   }
 }
 
@@ -177,6 +184,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useInsertionEffect';
     updateHookTypesDev();
     return updateInsertionEffect(create, deps);
+  },
+  useTransition:()=>{
+    currentHookNameInDev = 'useTransition';
+    updateHookTypesDev();
+    return updateTransition();
   }
   
 }
@@ -427,6 +439,13 @@ function updateReducer(reducer,initialArg,init?:any){
   let baseQueue = current.baseQueue;
   const pendingQueue = queue.pending;
   if(pendingQueue != null){
+    if (baseQueue !== null) {
+      // Merge the pending queue and the base queue.
+      const baseFirst = baseQueue.next;
+      const pendingFirst = pendingQueue.next;
+      baseQueue.next = pendingFirst;
+      pendingQueue.next = baseFirst;
+    }
     current.baseQueue = baseQueue = pendingQueue;
     queue.pending = null;
   }
@@ -436,25 +455,53 @@ function updateReducer(reducer,initialArg,init?:any){
     const first = baseQueue.next;
     let newState = current.baseState;
     let newBaseState = null;
-    let newBaseQueueFirst = null;
-    let newBaseQueueLast = null;
+    let newBaseQueueFirst:any = null;
+    let newBaseQueueLast:any = null;
     let update = first;
     do{
       const updateLane = update.lane;
-      if(update.eagerReducer == reducer){
-        newState = update.eagerState
+
+      if(!isSubsetOfLanes(renderLanes,updateLane)){
+        const clone = {
+          lane: updateLane,
+          action: update.action,
+          hasEagerState: update.hasEagerState,
+          eagerState: update.eagerState,
+          next: null
+        }
+
+        if (newBaseQueueLast == null) {
+          newBaseQueueFirst = newBaseQueueLast = clone;
+          newBaseState = newState;
+        } else {
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+        currentlyRenderingFiber.lanes = mergeLanes(currentlyRenderingFiber.lanes,updateLane)
+        markSkippedUpdateLanes(updateLane);
+
       }else{
-        const action = update.action;
-        newState = reducer(newState, action);
+        if(update.eagerReducer == reducer){
+          newState = update.eagerState
+        }else{
+          const action = update.action;
+          newState = reducer(newState, action);
+        }
       }
+
+     
       update = update.next
     } while(update != null && update != first)
     if(newBaseQueueLast == null){
       newBaseState = newState
+    }else {
+      newBaseQueueLast.next = newBaseQueueFirst
     }
+
     if(!Object.is(newState , hook.memoizedState)){
       markWorkInProgressReceivedUpdate()
     }
+
+    
     hook.memoizedState = newState
     hook.baseState = newBaseState
     hook.baseQueue = newBaseQueueLast
@@ -465,6 +512,8 @@ function updateReducer(reducer,initialArg,init?:any){
   if(baseQueue == null){
     queue.lanes = NoLanes
   }
+
+
   const dispatch = queue.dispatch
   return [hook.memoizedState, dispatch]
 
@@ -580,6 +629,7 @@ export const ContextOnlyDispatcher:any = {
 }
 
 export function renderWithHooks(current,workInProgress,Component,props,secondArg,nextRenderLanes){
+  renderLanes = nextRenderLanes;
   currentlyRenderingFiber = workInProgress
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null
@@ -596,6 +646,7 @@ export function renderWithHooks(current,workInProgress,Component,props,secondArg
   currentlyRenderingFiber = null
   currentHook = null;
   workInProgressHook = null;
+  renderLanes = NoLanes;
   return children
 }
 
@@ -683,4 +734,43 @@ export function bailoutHooks(current,workInProgress,lanes){
     workInProgress.flags &= ~(UpdateEffect | PassiveEffect)
   }
   current.lanes = removeLanes(current.lanes, lanes)
+}
+
+function startTransition(setPending, callback, options){
+  const previousPriority = getCurrentUpdatePriority();
+  setCurrentUpdatePriority(
+    higherEventPriority(previousPriority, ContinuousEventPriority),
+  )
+  setPending(true);
+
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = {};
+  const currentTransition = ReactCurrentBatchConfig.transition;
+
+  ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+
+  try{
+    setPending(false);
+    callback();
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
+    currentTransition._updatedFibers.clear();
+  }
+
+}
+
+function mountTransition(){
+  const [isPending, setPending] = mountState(false);
+  const start = startTransition.bind(null, setPending);
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = start;
+  return [isPending, start];
+}
+
+function updateTransition(){
+  const [isPending] = updateState(false);
+  const hook = updateWorkInProgressHook();
+  const start = hook.memoizedState;
+  return [isPending, start];
 }

@@ -233,7 +233,7 @@ function updateClassComponent(
 function finishClassComponent(current,workInProgress, Component, shouldUpdate, hasContext, renderLanes) {
   markRef(current, workInProgress);
 
-  const didCaptureError = (workInProgress.flags & DidCapture ) !== NoFlags;
+  const didCaptureError = (workInProgress.flags & DidCapture ) != NoFlags;
   if(!didCaptureError && !shouldUpdate){
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
   }

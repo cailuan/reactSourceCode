@@ -8,9 +8,31 @@ export const InputContinuousLane = /*            */ 0b00000000000000000000000000
 
 export const DefaultHydrationLane = /*            */ 0b0000000000000000000000000001000;
 export const DefaultLane = /*                    */ 0b0000000000000000000000000010000;
-const TransitionLanes = /*                       */ 0b0000000001111111111111111000000;
+
+const TransitionHydrationLane =   0b0000000000000000000000000100000;
+const TransitionLanes  =   0b0000000001111111111111111000000;
+const TransitionLane1 =   0b0000000000000000000000001000000;
+const TransitionLane2 =   0b0000000000000000000000010000000;
+const TransitionLane3 =   0b0000000000000000000000100000000;
+const TransitionLane4 =   0b0000000000000000000001000000000;
+const TransitionLane5 =   0b0000000000000000000010000000000;
+const TransitionLane6 =   0b0000000000000000000100000000000;
+const TransitionLane7 =   0b0000000000000000001000000000000;
+const TransitionLane8 =   0b0000000000000000010000000000000;
+const TransitionLane9 =   0b0000000000000000100000000000000;
+const TransitionLane10 =   0b0000000000000001000000000000000;
+const TransitionLane11 =   0b0000000000000010000000000000000;
+const TransitionLane12 =   0b0000000000000100000000000000000;
+const TransitionLane13 =   0b0000000000001000000000000000000;
+const TransitionLane14 =   0b0000000000010000000000000000000;
+const TransitionLane15 =   0b0000000000100000000000000000000;
+const TransitionLane16 =   0b0000000001000000000000000000000;
 
 const NonIdleLanes = /*                                 */ 0b0001111111111111111111111111111;
+
+
+let nextTransitionLane = TransitionLane1;
+export const NoTimestamp = -1;
 
 export function mergeLanes(a, b) {
   return a | b;
@@ -57,7 +79,33 @@ export function getNextLanes(root,lane?:number){
 }
 
 export function markRootFinished(root,remainingLanes){
-  root.pendingLanes = 0;
+  const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
+
+  root.pendingLanes = remainingLanes;
+  root.suspendedLanes = NoLanes;
+  root.pingedLanes = NoLanes;
+
+  root.expiredLanes &= remainingLanes;
+  root.mutableReadLanes &= remainingLanes;
+
+  root.entangledLanes &= remainingLanes;
+
+  const entanglements = root.entanglements;
+  const eventTimes = root.eventTimes;
+  const expirationTimes = root.expirationTimes;
+  let lanes = noLongerPendingLanes;
+  while (lanes > 0) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+
+    // entanglements[index] = NoLanes;
+    // eventTimes[index] = NoTimestamp;
+    // expirationTimes[index] = NoTimestamp;
+
+    lanes &= ~lane;
+  }
+
+
 }
 
 export function includesSomeLane(a,b){
@@ -73,5 +121,14 @@ export function isTransitionLane(lane) {
 }
 
 export function isSubsetOfLanes(set, subset) {
-  return (set & subset) === subset;
+  return (set & subset) == subset;
+}
+
+export function claimNextTransitionLane(){
+  const lane = nextTransitionLane;
+  nextTransitionLane <<= 1;
+  if ((nextTransitionLane & TransitionLanes) == NoLanes) {
+    nextTransitionLane = TransitionLane1;
+  }
+  return lane;
 }

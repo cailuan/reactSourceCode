@@ -55,3 +55,8 @@ export function useInsertionEffect(create, deps){
   const dispatcher = resolveDispatcher();
   return dispatcher.useInsertionEffect(create, deps);
 }
+
+export function useTransition(){
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useTransition();
+}

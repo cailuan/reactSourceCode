@@ -170,7 +170,7 @@ export function processUpdateQueue(workInProgress,props,instance,renderLanes){
         if(callback != null && update.lane != NoLane){
           workInProgress.flags |= Callback;
           const effects = queue.effects;
-          if (effects === null) {
+          if (effects == null) {
             queue.effects = [update];
           } else {
             effects.push(update);

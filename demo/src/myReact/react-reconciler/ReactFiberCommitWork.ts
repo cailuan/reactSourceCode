@@ -138,7 +138,7 @@ function commitMutationEffectsOnFiber(finishedWork,root,lanes){
       if (flags & Update) {
         const textInstance = finishedWork.stateNode;
         const newText = finishedWork.memoizedProps;
-        const oldText = current !== null ? current.memoizedProps : newText;
+        const oldText = current != null ? current.memoizedProps : newText;
         try {
           commitTextUpdate(textInstance, oldText, newText);
         } catch (error) {
@@ -511,13 +511,13 @@ function commitBeforeMutationEffectsOnFiber(finishedWork){
           break;
       }
       case ClassComponent:{
-        if (current !== null) {
+        if (current != null) {
           const prevProps = current.memoizedProps;
           const prevState = current.memoizedState;
           const instance = finishedWork.stateNode;
 
           const snapshot = instance.getSnapshotBeforeUpdate(
-            finishedWork.elementType === finishedWork.type
+            finishedWork.elementType == finishedWork.type
               ? prevProps
               : resolveDefaultProps(finishedWork.type, prevProps),
             prevState,
@@ -576,7 +576,7 @@ export function commitLayoutEffects(finishedWork,root,committedLanes){
 }
 
 function commitLayoutEffects_begin(subtreeRoot,root,committedLanes){
-  const isModernRoot = (subtreeRoot.mode & ConcurrentMode) !== NoMode;
+  const isModernRoot = (subtreeRoot.mode & ConcurrentMode) != NoMode;
   while (nextEffect != null) {
     const fiber = nextEffect;
     const firstChild = fiber.child;
@@ -632,7 +632,7 @@ function commitLayoutEffectOnFiber(finishedRoot,current,finishedWork,committedLa
                 instance.componentDidMount()
               }else {
                 //todo
-                const prevProps = finishedWork.elementType === finishedWork.type ? current.memoizedProps : resolveDefaultProps(
+                const prevProps = finishedWork.elementType == finishedWork.type ? current.memoizedProps : resolveDefaultProps(
                   finishedWork.type,
                   current.memoizedProps,
                 );

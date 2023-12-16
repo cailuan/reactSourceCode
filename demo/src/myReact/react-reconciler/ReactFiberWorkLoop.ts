@@ -1,5 +1,6 @@
 import { scheduleCallback } from "../scheduler/scheduler";
 import { NormalPriority as NormalSchedulerPriority } from "../scheduler/SchedulerPriorities";
+import ReactSharedInternals from "../shared/ReactSharedInternals";
 import { DiscreteEventPriority, getCurrentUpdatePriority, lanesToEventPriority, setCurrentUpdatePriority ,lowerEventPriority,DefaultEventPriority} from "./ReactEventPriorities";
 import { createWorkInProgress } from "./ReactFiber";
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork'
@@ -7,10 +8,14 @@ import { commitMutationEffects, commitBeforeMutationEffects, commitLayoutEffects
 import { completeWork } from "./ReactFiberCompleteWork";
 import { NoFlags, PassiveMask } from "./ReactFiberFlags";
 import { scheduleMicrotask } from "./ReactFiberHostConfig";
-import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane } from "./ReactFiberLane"
+import { markRootUpdated, mergeLanes,markStarvedLanesAsExpired, getHighestPriorityLane, getNextLanes, DefaultLane, NoLanes, SyncLane, markRootFinished, NoLane, claimNextTransitionLane } from "./ReactFiberLane"
 import { scheduleSyncCallback,flushSyncCallbacks } from "./ReactFiberSyncTaskQueue";
+import { NoTransition , requestCurrentTransition} from "./ReactFiberTransition";
 import { LegacyRoot } from "./ReactRootTags";
 import { ConcurrentMode, NoMode } from "./ReactTypeOfMode";
+import { now } from "./Scheduler";
+
+const { ReactCurrentBatchConfig } = ReactSharedInternals;
 
 const RootIncomplete = 0;
 const RootFatalErrored = 1;
@@ -24,6 +29,8 @@ let workInProgress:any = null
 let workInProgressRootRenderLanes = NoLanes
 let workInProgressRootExitStatus = RootIncomplete
 let rootWithPendingPassiveEffects:any = null
+
+let currentEventTransitionLane = NoLanes;
 
 let workInProgressRootSkippedLanes = NoLanes;
 const BatchedContext = /*               */ 0b001;
@@ -48,6 +55,26 @@ export function requestUpdateLane(fiber){
   if( (mode & ConcurrentMode) == NoMode ){
     return SyncLane
   } 
+
+  
+  const isTransition = requestCurrentTransition() != NoTransition;
+  
+  
+  if(isTransition){
+    if(ReactCurrentBatchConfig.transition != null){
+      const transition = ReactCurrentBatchConfig.transition;
+      if (!transition._updatedFibers) {
+        transition._updatedFibers = new Set();
+      }
+      transition._updatedFibers.add(fiber);
+    }
+
+    if(currentEventTransitionLane == NoLane){
+      currentEventTransitionLane = claimNextTransitionLane();
+      
+    }
+    return currentEventTransitionLane
+  }
   const updateLane =  getCurrentUpdatePriority()
   if(updateLane != NoLanes){
     return updateLane
@@ -265,9 +292,20 @@ function commitRoot(root){
 function commitRootImpl(root, renderPriorityLevel){
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes
+
+
+  let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+  markRootFinished(root, remainingLanes);
+
   root.finishedWork = null
   root.finishedLanes = NoLanes
   root.callbackPriority = NoLane
+
+  if(root == workInProgressRoot){
+    workInProgressRoot = null;
+    workInProgress = null;
+    workInProgressRootRenderLanes = NoLanes;
+  }
   
   //todo 任务队列 useEffect 挂载和删除
   if((finishedWork.subtreeFlags & PassiveMask) != NoFlags || (finishedWork.flags & PassiveMask ) != NoFlags ){
@@ -281,7 +319,7 @@ function commitRootImpl(root, renderPriorityLevel){
     }
   }
 
-  markRootFinished(root,0)
+
   commitBeforeMutationEffects(root, finishedWork)
   commitMutationEffects(root, finishedWork, lanes);
   root.current = finishedWork
@@ -294,6 +332,8 @@ function commitRootImpl(root, renderPriorityLevel){
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
   }
+
+  ensureRootIsScheduled(root, now())
   
   flushSyncCallbacks()
   // onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
@@ -307,5 +347,12 @@ export function isUnsafeClassRenderPhaseUpdate(fiber){
     (!false ||
       (fiber.mode & ConcurrentMode) == NoMode) &&
     (executionContext & RenderContext) != NoContext
+  );
+}
+
+export function markSkippedUpdateLanes(lane){
+  workInProgressRootSkippedLanes = mergeLanes(
+    lane,
+    workInProgressRootSkippedLanes,
   );
 }

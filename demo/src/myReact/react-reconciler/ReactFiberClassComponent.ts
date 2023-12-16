@@ -187,8 +187,8 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderLane
 
         if(typeof instance.getSnapshotBeforeUpdate == 'function'){
             if (
-                unresolvedOldProps !== current.memoizedProps ||
-                oldState !== current.memoizedState
+                unresolvedOldProps != current.memoizedProps ||
+                oldState != current.memoizedState
               ) {
                 workInProgress.flags |= Snapshot;
               }
@@ -215,19 +215,19 @@ function updateClassInstance(current, workInProgress, ctor, newProps, renderLane
             workInProgress.flags |= Snapshot;
         }
     }else {
-        if (typeof instance.componentDidUpdate === 'function') {
+        if (typeof instance.componentDidUpdate == 'function') {
             if (
-              unresolvedOldProps !== current.memoizedProps ||
-              oldState !== current.memoizedState
+              unresolvedOldProps != current.memoizedProps ||
+              oldState != current.memoizedState
             ) {
               workInProgress.flags |= Update;
             }
         }
 
-        if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+        if (typeof instance.getSnapshotBeforeUpdate == 'function') {
             if (
-              unresolvedOldProps !== current.memoizedProps ||
-              oldState !== current.memoizedState
+              unresolvedOldProps != current.memoizedProps ||
+              oldState != current.memoizedState
             ) {
               workInProgress.flags |= Snapshot;
             }

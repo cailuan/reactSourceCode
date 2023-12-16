@@ -4,7 +4,7 @@ import React from "react";
 import { Component } from "./myReact/react";
 import {createContext , forwardRef} from './myReact/react/react'
 import { createRoot } from "./myReact/react-dom";
-import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext, useImperativeHandle ,useInsertionEffect} from "./myReact/react";
+import { useState,useRef,useEffect,useMemo,useCallback,useReducer,useLayoutEffect ,useContext, useImperativeHandle ,useInsertionEffect ,useTransition} from "./myReact/react";
 // import {createRoot} from "./myReact/react-dom/client/ReactDOMRoot"
 
 const rootEl = document.getElementById("root");
@@ -389,8 +389,26 @@ class ChildChildComponent extends Component {
     return <div>ChildComponent</div>
   }
 } 
+
+
+function RootTransition(){
+  const [initState, setInitState] = useState(1);
+  const [ pending, startTransition ] = useTransition(initState);
+  const clickTransition = ()=>{
+    debugger
+    startTransition(()=>{
+      setInitState(2)
+    })
+  }
+  console.log(pending ,initState )
+  return <div onClick={clickTransition}>
+    {initState}
+  </div>
+}
+
+
 export default function(){
     document.title = "my react"
-    createRoot(rootEl).render(<AppComponent />);
+    createRoot(rootEl).render(<RootTransition />);
 
 }
