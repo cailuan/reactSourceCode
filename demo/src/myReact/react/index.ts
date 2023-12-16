@@ -1,6 +1,6 @@
 export {
     useState,useRef,useEffect,useMemo ,useCallback,useReducer,useLayoutEffect,useContext ,useImperativeHandle, useInsertionEffect,
-    useTransition
+    useTransition, useDeferredValue
 } from './ReactHooks'
 
 export {Component} from "./src/React"

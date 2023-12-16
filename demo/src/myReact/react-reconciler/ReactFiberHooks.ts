@@ -3,7 +3,7 @@ import ReactSharedInternals from "../shared/ReactSharedInternals"
 import { getCurrentUpdatePriority, setCurrentUpdatePriority, higherEventPriority, ContinuousEventPriority } from "./ReactEventPriorities";
 import { markWorkInProgressReceivedUpdate } from "./ReactFiberBeginWork";
 import { Passive as PassiveEffect, PassiveStatic as PassiveStaticEffect, Update as UpdateEffect ,LayoutStatic as LayoutStaticEffect ,MountLayoutDev as MountLayoutDevEffect, Update} from "./ReactFiberFlags";
-import { isSubsetOfLanes, mergeLanes, NoLanes ,removeLanes } from "./ReactFiberLane";
+import { isSubsetOfLanes, mergeLanes, NoLanes ,removeLanes , includesOnlyNonUrgentLanes, claimNextTransitionLane} from "./ReactFiberLane";
 import { readContext } from "./ReactFiberNewContext";
 import { requestEventTime, requestUpdateLane, scheduleUpdateOnFiber , markSkippedUpdateLanes} from "./ReactFiberWorkLoop";
 import { Passive as HookPassive ,HasEffect as HookHasEffect,Layout as HookLayout,  Insertion as HookInsertion,} from "./ReactHookEffectTags";
@@ -111,6 +111,11 @@ HooksDispatcherOnMountInDEV = {
     currentHookNameInDev = 'useInsertionEffect';
     mountHookTypesDev();
     return mountTransition();
+  },
+  useDeferredValue: (value)=>{
+    currentHookNameInDev = 'useTransition';
+    mountHookTypesDev();
+    return mountDeferredValue(value);
   }
 }
 
@@ -189,6 +194,11 @@ HooksDispatcherOnUpdateInDEV ={
     currentHookNameInDev = 'useTransition';
     updateHookTypesDev();
     return updateTransition();
+  },
+  useDeferredValue: (value)=>{
+    currentHookNameInDev = 'useTransition';
+    updateHookTypesDev();
+    return updateDeferredValue(value);
   }
   
 }
@@ -773,4 +783,43 @@ function updateTransition(){
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
   return [isPending, start];
+}
+
+function mountDeferredValue(value){
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = value;
+  return value;
+}
+
+function updateDeferredValue(value){
+  const hook = updateWorkInProgressHook();
+  const resolvedCurrentHook = currentHook;
+  const prevValue = resolvedCurrentHook.memoizedState;
+  return updateDeferredValueImpl(hook, prevValue, value);
+}
+
+function updateDeferredValueImpl(hook, prevValue, value){
+  const shouldDeferValue =  !includesOnlyNonUrgentLanes(renderLanes);
+  if(shouldDeferValue){
+    if (!objectIs(value, prevValue)) {
+      const deferredLane = claimNextTransitionLane();
+      currentlyRenderingFiber.lanes = mergeLanes(
+        currentlyRenderingFiber.lanes,
+        deferredLane,
+      );
+
+      markSkippedUpdateLanes(deferredLane);
+      hook.baseState = true;
+    }
+    return prevValue;
+  }else {
+    if(hook.baseState){
+      hook.baseState = false;
+      
+      markWorkInProgressReceivedUpdate()
+    }
+    hook.memoizedState = value;
+    return value;
+  }
+  
 }

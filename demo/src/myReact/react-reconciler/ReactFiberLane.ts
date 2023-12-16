@@ -132,3 +132,8 @@ export function claimNextTransitionLane(){
   }
   return lane;
 }
+
+export function includesOnlyNonUrgentLanes(lanes){
+  const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
+  return  (lanes & UrgentLanes) === NoLanes;
+}

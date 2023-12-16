@@ -430,16 +430,14 @@ function RootDeferredValue(){
 
 function RootTransitions(){
   const [initState, setInitState] = useState(1);
-  const [ pending, startTransition ] = useTransition(initState);
+  const deferredValue  = useDeferredValue(initState);
   const clickTransition = ()=>{
     debugger
-    startTransition(()=>{
-      setInitState(2)
-    })
+    setInitState(2)
   }
-  console.log(pending ,initState )
+  console.log(deferredValue ,initState )
   return <div onClick={clickTransition}>
-    {initState}
+    {deferredValue}
   </div>
 }
 
